@@ -1,0 +1,60 @@
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+  width: 100%;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f8faff;
+  color: #263675;
+}
+html,
+body,
+#root {
+  width: 100%;
+  min-height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: "Segoe UI", Arial, sans-serif;
+  background: #f8faff;
+}
+
+
+.welcome-section {
+  min-height: calc(100vh - 78px);
+  padding: 50px 24px;
+  text-align: center;
+  background: linear-gradient(
+    180deg,
+    #f8faff 0%,
+    #f0f5ff 55%,
+    #f0fcfa 100%
+  );
+}
+
+.welcome-section h1 {
+  margin: 0 0 18px;
+  color: #41518b;
+  font-size: 50px;
+  font-weight: 800;
+}
+
+.welcome-section p {
+  font-weight: 500;
+  max-width: 650px;
+  margin: 0 auto;
+  color: #121418;
+  font-size: 17px;
+  line-height: 1.8;
+}

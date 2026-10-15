@@ -1,0 +1,29 @@
+
+.navbar {
+  width: 100%;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  padding: 20px 6%;
+  margin: 0;
+  background: linear-gradient(
+    100deg,
+    #d75ccf,
+    #c7a1c5,
+    #087fbd,
+    #13b8a6
+  );
+  box-sizing: border-box;
+}
+.brand-name {
+  color: #000000;
+  font-size: 40px;
+  font-weight: 700;
+  margin-left: 10px;
+}
+
+
+.brand-icon {
+  font-size: 38px;
+}
+
