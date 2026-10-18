@@ -1,6 +1,9 @@
 
 import Navbar from "./components/Navbar";
 import "./App.css";
+import { Routes, Route } from "react-router-dom";
+import Register from "./pages/Register";
+import Login from "./pages/Login";
 
 const features = [
   {
@@ -60,7 +63,7 @@ const steps = [
   },
 ];
 
-function App() {
+function Home() {
   return (
     <>
       <Navbar />
@@ -240,6 +243,16 @@ function App() {
         <p>Plan. Learn. Achieve.</p>
       </footer>
     </>
+  );
+}
+
+function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/register" element={<Register />} />
+      <Route path="/login" element={<Login />} />
+    </Routes>
   );
 }
 

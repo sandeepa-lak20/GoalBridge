@@ -1,0 +1,152 @@
+
+.auth-page {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 35px 18px;
+  margin: 0;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #f7f5ff, #eff9ff, #fff8f0);
+  font-family: "DM Sans", sans-serif;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 36px;
+  box-sizing: border-box;
+  background: white;
+  border: 1px solid #eee8ff;
+  border-radius: 22px;
+  box-shadow: 0 12px 40px rgba(76, 58, 130, 0.09);
+}
+
+.login-card {
+  max-width: 460px;
+}
+
+.auth-brand {
+  display: inline-block;
+  margin-bottom: 22px;
+  color: #7151c7;
+  font-size: 23px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.auth-card h1 {
+  margin: 0 0 10px;
+  color: #292344;
+  font-size: 30px;
+}
+
+.auth-subtitle {
+  margin: 0 0 26px;
+  color: #77738b;
+  line-height: 1.6;
+}
+
+.auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.name-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
+  width: 100%;
+}
+
+.form-group label {
+  display: block;
+  width: 100%;
+  text-align: left;
+  align-self: flex-start;
+  color: #39334f;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.form-group input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 13px 14px;
+  border: 1px solid #e1ddec;
+  border-radius: 10px;
+  outline: none;
+  background: #fdfcff;
+  color: #292344;
+  font: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-group input:focus {
+  border-color: #8c70db;
+  box-shadow: 0 0 0 3px rgba(140, 112, 219, 0.13);
+}
+
+.auth-button {
+  width: 100%;
+  padding: 14px;
+  margin-top: 4px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #7151c7, #9073df);
+  color: white;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.auth-button:hover {
+  transform: translateY(-2px);
+  opacity: 0.94;
+}
+
+.auth-switch {
+  margin: 23px 0 0;
+  color: #77738b;
+  text-align: center;
+  font-size: 14px;
+}
+
+.auth-switch a,
+.back-home {
+  color: #7151c7;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.back-home {
+  display: block;
+  margin-top: 22px;
+  text-align: center;
+  font-size: 14px;
+}
+
+@media (max-width: 500px) {
+  .auth-card {
+    padding: 25px 20px;
+  }
+
+  .auth-card h1 {
+    font-size: 25px;
+  }
+
+  .name-fields {
+    grid-template-columns: 1fr;
+  }
+}
