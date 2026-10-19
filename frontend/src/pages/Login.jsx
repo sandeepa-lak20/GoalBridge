@@ -1,8 +1,57 @@
 
-import { Link } from "react-router-dom";
+
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 import "./Auth.css";
 
+const API_URL = "http://localhost:5000/api/auth";
+
 function Login() {
+  const navigate = useNavigate();
+
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [isError, setIsError] = useState(false);
+
+  async function handleSubmit(event) {
+    event.preventDefault();
+    setMessage("");
+    setIsError(false);
+    setLoading(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/login`, {
+        identifier,
+        password,
+      });
+
+      // Store the token and basic user information.
+      localStorage.setItem("token", response.data.token);
+      localStorage.setItem(
+        "user",
+        JSON.stringify(response.data.user)
+      );
+
+      setMessage(response.data.message);
+
+      // For now, return to the home page.
+      setTimeout(() => {
+        navigate("/");
+      }, 700);
+    } catch (error) {
+      setIsError(true);
+      setMessage(
+        error.response?.data?.message ||
+          "Unable to log in. Check your connection and try again."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <div className="auth-page">
       <div className="auth-card login-card">
@@ -15,11 +64,15 @@ function Login() {
           Log in to continue your career journey.
         </p>
 
-        <form className="auth-form">
+        <form className="auth-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Username or Email</label>
             <input
               type="text"
+              value={identifier}
+              onChange={(event) =>
+                setIdentifier(event.target.value)
+              }
               placeholder="Enter username or email"
               autoComplete="username"
               required
@@ -30,14 +83,33 @@ function Login() {
             <label>Password</label>
             <input
               type="password"
+              value={password}
+              onChange={(event) =>
+                setPassword(event.target.value)
+              }
               placeholder="Enter your password"
               autoComplete="current-password"
               required
             />
           </div>
 
-          <button type="submit" className="auth-button">
-            Login →
+          {message && (
+            <p
+              role="status"
+              style={{
+                color: isError ? "#c62828" : "#238636",
+              }}
+            >
+              {message}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            className="auth-button"
+            disabled={loading}
+          >
+            {loading ? "Logging in..." : "Login →"}
           </button>
         </form>
 
