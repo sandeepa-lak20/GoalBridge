@@ -1,0 +1,209 @@
+
+.dashboard-page {
+  min-height: 100vh;
+  background: #f8f8ff;
+  color: #29355f;
+  text-align: left;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 8%;
+  background: white;
+  border-bottom: 1px solid #eeebf8;
+}
+
+.dashboard-brand {
+  font-size: 24px;
+  font-weight: 800;
+  color: #29355f;
+}
+
+.dashboard-brand span {
+  color: #7561d8;
+}
+
+.logout-btn {
+  padding: 10px 20px;
+  background: #f0edff;
+  border: none;
+  border-radius: 10px;
+  color: #7561d8;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.dashboard-main {
+  max-width: 1200px;
+  margin: auto;
+  padding: 45px 25px;
+}
+
+.dashboard-welcome {
+  padding: 38px;
+  background: linear-gradient(120deg, #eeeaff, #e5f8f2);
+  border-radius: 22px;
+  margin-bottom: 38px;
+}
+
+.dashboard-tag {
+  color: #7561d8;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+}
+
+.dashboard-welcome h1 {
+  font-size: clamp(26px, 4vw, 36px);
+  margin: 15px 0;
+  color: #29355f;
+}
+
+.dashboard-welcome p,
+.section-subtitle {
+  color: #777f9a;
+  line-height: 1.7;
+}
+
+.dashboard-section h2,
+.dashboard-bottom h2 {
+  font-size: 23px;
+  color: #29355f;
+  margin-bottom: 10px;
+}
+
+.dashboard-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  margin-top: 25px;
+}
+
+.stat-card {
+  background: white;
+  border: 1px solid #eeebf8;
+  border-radius: 18px;
+  padding: 25px;
+  box-shadow: 0 8px 25px #33336608;
+}
+
+.stat-icon {
+  font-size: 28px;
+  margin-bottom: 20px;
+}
+
+.stat-card p {
+  color: #858ba3;
+  font-size: 14px;
+}
+
+.stat-card h3 {
+  font-size: 22px;
+  margin: 10px 0 0;
+  color: #29355f;
+}
+
+.dashboard-bottom {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 22px;
+  margin-top: 35px;
+}
+
+.getting-started-card,
+.journey-card {
+  background: white;
+  border: 1px solid #eeebf8;
+  padding: 30px;
+  border-radius: 20px;
+}
+
+.getting-started-card p {
+  color: #777f9a;
+  line-height: 1.8;
+  margin: 15px 0 25px;
+}
+
+.start-goal-btn {
+  padding: 14px 22px;
+  background: #7561d8;
+  color: white;
+  border: none;
+  border-radius: 11px;
+  font-weight: 700;
+}
+
+.start-goal-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.getting-started-card small {
+  display: block;
+  margin-top: 12px;
+  color: #858ba3;
+}
+
+.journey-item {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 18px 0;
+  border-bottom: 1px solid #f0edf8;
+}
+
+.journey-item span {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  background: #eeeaff;
+  border-radius: 50%;
+  color: #7561d8;
+  font-weight: 700;
+}
+
+.journey-item strong {
+  font-size: 14px;
+}
+
+.journey-item p {
+  color: #858ba3;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+@media (max-width: 900px) {
+  .dashboard-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .dashboard-bottom {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 500px) {
+  .dashboard-header {
+    padding: 18px 5%;
+  }
+
+  .dashboard-main {
+    padding: 25px 15px;
+  }
+
+  .dashboard-welcome {
+    padding: 25px;
+  }
+
+  .dashboard-stats {
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 18px;
+  }
+}

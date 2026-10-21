@@ -38,9 +38,7 @@ function Login() {
       setMessage(response.data.message);
 
       // For now, return to the home page.
-      setTimeout(() => {
-        navigate("/");
-      }, 700);
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       setIsError(true);
       setMessage(
