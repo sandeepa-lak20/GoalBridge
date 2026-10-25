@@ -1,0 +1,257 @@
+
+.profile-screen {
+  max-width: 960px;
+  margin: 0 auto;
+  color: #29355f;
+}
+
+.profile-heading {
+  margin-bottom: 28px;
+}
+
+.profile-heading h1 {
+  font-size: 32px;
+  margin: 12px 0 6px;
+}
+
+.profile-heading p,
+.profile-identity p {
+  color: #858ba3;
+}
+
+.profile-panel {
+  background: #fff;
+  border: 1px solid #eeebf8;
+  border-radius: 20px;
+  padding: 30px;
+  box-shadow: 0 6px 24px #29215c09;
+}
+
+.profile-identity {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #eeeaf5;
+}
+
+.profile-identity h2 {
+  margin: 0 0 4px;
+}
+
+.profile-avatar {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  background: #eeeaff;
+  color: #7561d8;
+  display: grid;
+  place-items: center;
+  font-size: 28px;
+  font-weight: 800;
+}
+
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-form h3 {
+  margin: 28px 0 2px;
+  font-size: 18px;
+}
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.profile-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.profile-form input,
+.profile-form textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #dddceb;
+  border-radius: 10px;
+  padding: 12px 14px;
+  background: #fff;
+  color: #29355f;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.profile-form input:focus,
+.profile-form textarea:focus {
+  outline: 2px solid #bcb1ff;
+  border-color: #7561d8;
+}
+
+.profile-form input[readonly] {
+  background: #f6f6fa;
+  color: #858ba3;
+}
+
+.profile-add-row {
+  display: flex;
+  gap: 10px;
+}
+
+.profile-add-row input {
+  flex: 1;
+}
+
+.profile-add-row button,
+.profile-actions button {
+  border: 0;
+  border-radius: 10px;
+  padding: 12px 18px;
+  background: #7561d8;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.profile-add-row button:hover,
+.profile-actions button:hover {
+  background: #5e4bbb;
+}
+
+.profile-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-height: 10px;
+}
+
+.profile-tags span {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: #eeeaff;
+  color: #6550c6;
+  padding: 8px 12px;
+  border-radius: 30px;
+  font-size: 13px;
+}
+
+.profile-tags button {
+  background: transparent;
+  border: 0;
+  color: inherit;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.profile-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 14px;
+}
+
+.profile-actions button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.profile-error {
+  color: #b42318;
+}
+
+.profile-success {
+  color: #167347;
+}
+
+@media (max-width: 650px) {
+  .profile-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .profile-panel {
+    padding: 18px;
+  }
+
+  .profile-add-row {
+    flex-wrap: wrap;
+  }
+
+  .profile-add-row button {
+    width: 100%;
+  }
+}
+
+
+/* Change Password section */
+
+.password-section {
+  margin-top: 35px;
+  padding-top: 28px;
+  border-top: 1px solid #eeeaf5;
+}
+
+.password-section-header h3 {
+  font-size: 18px;
+  color: #29355f;
+  margin-bottom: 8px;
+}
+
+.password-section-header p {
+  color: #858ba3;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.password-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  max-width: 600px;
+}
+
+.password-form > label:not(.password-show-toggle) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.password-form input:not([type="checkbox"]) {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #dddceb;
+  border-radius: 10px;
+  font: inherit;
+  box-sizing: border-box;
+}
+
+.password-form input:focus {
+  outline: 2px solid #bcb1ff;
+  border-color: #7561d8;
+}
+
+.password-show-toggle {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.password-show-toggle input {
+  width: auto;
+  accent-color: #7561d8;
+}
+
+.password-form .profile-actions {
+  justify-content: flex-start;
+}

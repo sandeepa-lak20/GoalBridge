@@ -239,7 +239,7 @@ router.put("/:id", async (req, res) => {
       },
       { $set: updates },
       {
-        new: true,
+        returnDocument: "after",
         runValidators: true,
       }
     );

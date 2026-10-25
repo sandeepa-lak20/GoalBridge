@@ -19,6 +19,33 @@ const userSchema = new mongoose.Schema(
       trim: true,
     },
     password: { type: String, required: true, select: false },
+    
+   university: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 120,
+    },
+    fieldOfStudy: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 120,
+    },
+    bio: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: 500,
+    },
+    skills: {
+      type: [String],
+      default: [],
+    },
+    careerInterests: {
+      type: [String],
+      default: [],
+    },
   },
   { timestamps: true }
 );

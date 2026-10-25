@@ -1,5 +1,3 @@
-
-
 import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
@@ -7,6 +5,8 @@ import cors from "cors";
 
 import authRoutes from "./routes/auth.js";
 import goalRoutes from "./routes/goals.js";
+import profileRoutes from "./routes/profile.js";
+import changePasswordRoutes from "./routes/changePassword.js";
 
 dotenv.config();
 
@@ -33,6 +33,12 @@ app.use("/api/auth", authRoutes);
 
 // New goal management routes
 app.use("/api/goals", goalRoutes);
+
+// New profile management routes
+app.use("/api/profile", profileRoutes);
+
+// New change password routes
+app.use("/api/profile/change-password", changePasswordRoutes);
 
 // Invalid API routes
 app.use((req, res) => {

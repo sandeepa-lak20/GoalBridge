@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
+import Profile from "./Profile";
 
 const API_URL = "http://localhost:5000/api/goals";
 
@@ -56,7 +57,11 @@ function Dashboard() {
     user = null;
   }
 
-  const firstName = user?.firstName || "User";
+  const [profileName, setProfileName] = useState(
+  user?.firstName || "User"
+  );
+
+  const firstName = profileName;
   const userId = user?.id || user?._id;
 
   // Dashboard states
@@ -552,6 +557,15 @@ function Dashboard() {
           className="dashboard-main"
           id="dashboard"
         >
+          {activeSection === "profile" ? (
+          <Profile
+            onSaved={(updatedUser) =>
+              setProfileName(updatedUser.firstName)
+            }
+          />
+        ) : (
+          <>
+          
 
           {/* WELCOME SECTION */}
           <section className="dashboard-welcome">
@@ -1038,12 +1052,6 @@ function Dashboard() {
                           </span>
                         )}
 
-                        <span>
-                          {goal.completed
-                            ? "Completed"
-                            : "In Progress"}
-                        </span>
-
                         <span
                           className={`deadline-status status-${getDeadlineStatus(goal)
                             .toLowerCase()
@@ -1147,7 +1155,8 @@ function Dashboard() {
             )}
 
           </section>
-
+          </>
+        )}
         </main>
       </div>
     </div>
