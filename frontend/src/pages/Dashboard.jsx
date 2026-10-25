@@ -35,7 +35,10 @@ function Dashboard() {
   const [busyGoalId, setBusyGoalId] = useState(null);
   const [goalError, setGoalError] = useState("");
 
-  // Helper function for backend requests
+  // NEW: Store the ID of the goal being edited
+  const [editingGoalId, setEditingGoalId] = useState(null);
+
+  // Helper for authenticated backend requests
   async function goalRequest(path = "", options = {}) {
     let response;
 
@@ -126,8 +129,41 @@ function Dashboard() {
     };
   }, [token, userId]);
 
-  // Add new goal to MongoDB
-  async function addGoal(e) {
+  // Clear form fields and editing state
+  function resetGoalForm() {
+    setGoalTitle("");
+    setGoalDescription("");
+    setGoalCategory("Learning");
+    setGoalDate("");
+    setEditingGoalId(null);
+    setShowForm(false);
+  }
+
+  // Open form for creating a new goal
+  function openAddGoalForm() {
+    resetGoalForm();
+    setGoalError("");
+    setShowForm(true);
+    scrollToSection("my-goals");
+  }
+
+  // NEW: Open form with existing goal details
+  function editGoal(goal) {
+    if (savingGoal || busyGoalId) return;
+
+    setEditingGoalId(goal._id);
+    setGoalTitle(goal.title);
+    setGoalDescription(goal.description || "");
+    setGoalCategory(goal.category || "Learning");
+    setGoalDate(goal.deadline || "");
+    setGoalError("");
+    setShowForm(true);
+
+    scrollToSection("my-goals");
+  }
+
+  // Create or update a goal
+  async function saveGoal(e) {
     e.preventDefault();
 
     if (!goalTitle.trim() || savingGoal) return;
@@ -136,29 +172,47 @@ function Dashboard() {
       setSavingGoal(true);
       setGoalError("");
 
-      const newGoal = {
+      const goalData = {
         title: goalTitle.trim(),
         description: goalDescription.trim(),
         category: goalCategory,
         deadline: goalDate,
-        completed: false,
       };
 
-      const data = await goalRequest("", {
-        method: "POST",
-        body: JSON.stringify(newGoal),
-      });
+      if (editingGoalId) {
+        // UPDATE existing goal using PUT
+        const data = await goalRequest(
+          `/${editingGoalId}`,
+          {
+            method: "PUT",
+            body: JSON.stringify(goalData),
+          }
+        );
 
-      setGoals((previousGoals) => [
-        data.goal,
-        ...previousGoals,
-      ]);
+        setGoals((previousGoals) =>
+          previousGoals.map((goal) =>
+            goal._id === editingGoalId
+              ? data.goal
+              : goal
+          )
+        );
+      } else {
+        // CREATE new goal using POST
+        const data = await goalRequest("", {
+          method: "POST",
+          body: JSON.stringify({
+            ...goalData,
+            completed: false,
+          }),
+        });
 
-      setGoalTitle("");
-      setGoalDescription("");
-      setGoalDate("");
-      setGoalCategory("Learning");
-      setShowForm(false);
+        setGoals((previousGoals) => [
+          data.goal,
+          ...previousGoals,
+        ]);
+      }
+
+      resetGoalForm();
     } catch (error) {
       setGoalError(error.message);
     } finally {
@@ -166,9 +220,9 @@ function Dashboard() {
     }
   }
 
-  // Mark goal as completed or incomplete
+  // Complete or uncomplete a goal
   async function toggleGoal(id) {
-    if (busyGoalId) return;
+    if (busyGoalId || savingGoal) return;
 
     const selectedGoal = goals.find(
       (goal) => goal._id === id
@@ -199,9 +253,9 @@ function Dashboard() {
     }
   }
 
-  // Delete goal from MongoDB
+  // Delete a goal
   async function deleteGoal(id) {
-    if (busyGoalId) return;
+    if (busyGoalId || savingGoal) return;
 
     const confirmed = window.confirm(
       "Are you sure you want to delete this goal?"
@@ -222,6 +276,11 @@ function Dashboard() {
           (goal) => goal._id !== id
         )
       );
+
+      // Close edit form if the deleted goal was being edited
+      if (editingGoalId === id) {
+        resetGoalForm();
+      }
     } catch (error) {
       setGoalError(error.message);
     } finally {
@@ -233,7 +292,6 @@ function Dashboard() {
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
-
     navigate("/login", { replace: true });
   }
 
@@ -257,25 +315,27 @@ function Dashboard() {
   ).length;
 
   const progress = goals.length
-    ? Math.round((completedGoals / goals.length) * 100)
+    ? Math.round(
+        (completedGoals / goals.length) * 100
+      )
     : 0;
 
-  // Today's local date in YYYY-MM-DD format
   const now = new Date();
+
   const today = [
     now.getFullYear(),
     String(now.getMonth() + 1).padStart(2, "0"),
     String(now.getDate()).padStart(2, "0"),
   ].join("-");
 
-  // Upcoming deadlines
   const upcomingGoals = goals
-    .filter((goal) => !goal.completed && goal.deadline)
+    .filter(
+      (goal) => !goal.completed && goal.deadline
+    )
     .sort((a, b) =>
       a.deadline.localeCompare(b.deadline)
     );
 
-  // Overview cards
   const stats = [
     {
       icon: "🧭",
@@ -299,7 +359,6 @@ function Dashboard() {
     },
   ];
 
-  // Redirect users who are not logged in
   if (!token || !userId) {
     return <Navigate to="/login" replace />;
   }
@@ -322,9 +381,13 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "dashboard" ? "active" : ""
+              activeSection === "dashboard"
+                ? "active"
+                : ""
             }`}
-            onClick={() => scrollToSection("dashboard")}
+            onClick={() =>
+              scrollToSection("dashboard")
+            }
           >
             🏠 Dashboard
           </button>
@@ -332,9 +395,13 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "my-goals" ? "active" : ""
+              activeSection === "my-goals"
+                ? "active"
+                : ""
             }`}
-            onClick={() => scrollToSection("my-goals")}
+            onClick={() =>
+              scrollToSection("my-goals")
+            }
           >
             🎯 My Goals
           </button>
@@ -342,9 +409,13 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "career-paths" ? "active" : ""
+              activeSection === "career-paths"
+                ? "active"
+                : ""
             }`}
-            onClick={() => setActiveSection("career-paths")}
+            onClick={() =>
+              setActiveSection("career-paths")
+            }
           >
             🧭 Career Paths
           </button>
@@ -352,9 +423,13 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "profile" ? "active" : ""
+              activeSection === "profile"
+                ? "active"
+                : ""
             }`}
-            onClick={() => setActiveSection("profile")}
+            onClick={() =>
+              setActiveSection("profile")
+            }
           >
             👤 My Profile
           </button>
@@ -423,7 +498,6 @@ function Dashboard() {
             </p>
 
             <div className="dashboard-stats">
-
               {stats.map((stat) => (
                 <div
                   className="stat-card"
@@ -437,8 +511,8 @@ function Dashboard() {
                   <h3>{stat.value}</h3>
                 </div>
               ))}
-
             </div>
+
           </section>
 
           {/* OVERALL PROGRESS */}
@@ -488,10 +562,7 @@ function Dashboard() {
 
               <button
                 className="start-goal-btn"
-                onClick={() => {
-                  setShowForm(true);
-                  scrollToSection("my-goals");
-                }}
+                onClick={openAddGoalForm}
               >
                 + Create Your First Goal
               </button>
@@ -559,7 +630,14 @@ function Dashboard() {
 
               <button
                 className="add-goal-btn"
-                onClick={() => setShowForm(!showForm)}
+                disabled={savingGoal}
+                onClick={() => {
+                  if (showForm) {
+                    resetGoalForm();
+                  } else {
+                    openAddGoalForm();
+                  }
+                }}
               >
                 {showForm ? "Cancel" : "+ Add Goal"}
               </button>
@@ -579,14 +657,18 @@ function Dashboard() {
               </p>
             )}
 
-            {/* ADD GOAL FORM */}
+            {/* ADD / EDIT GOAL FORM */}
             {showForm && (
               <form
                 className="goal-form"
-                onSubmit={addGoal}
+                onSubmit={saveGoal}
               >
 
-                <h3>Create a New Goal</h3>
+                <h3>
+                  {editingGoalId
+                    ? "✏️ Edit Goal"
+                    : "Create a New Goal"}
+                </h3>
 
                 <label htmlFor="goal-title">
                   Goal Title
@@ -644,26 +726,40 @@ function Dashboard() {
                   id="goal-date"
                   type="date"
                   value={goalDate}
-                  min={today}
                   onChange={(e) =>
                     setGoalDate(e.target.value)
                   }
                 />
 
-                <button
-                  type="submit"
-                  className="save-goal-btn"
-                  disabled={savingGoal}
-                >
-                  {savingGoal
-                    ? "Saving..."
-                    : "Save Goal"}
-                </button>
+                <div className="goal-form-actions">
+                  <button
+                    type="submit"
+                    className="save-goal-btn"
+                    disabled={savingGoal}
+                  >
+                    {savingGoal
+                      ? "Saving..."
+                      : editingGoalId
+                      ? "Update Goal"
+                      : "Save Goal"}
+                  </button>
+
+                  {editingGoalId && (
+                    <button
+                      type="button"
+                      className="cancel-edit-btn"
+                      disabled={savingGoal}
+                      onClick={resetGoalForm}
+                    >
+                      Cancel Editing
+                    </button>
+                  )}
+                </div>
 
               </form>
             )}
 
-            {/* LOADING GOALS */}
+            {/* GOALS LIST */}
             {loadingGoals ? (
               <div className="goals-empty">
                 <p>Loading your goals...</p>
@@ -702,11 +798,13 @@ function Dashboard() {
                     <input
                       type="checkbox"
                       checked={goal.completed}
-                      disabled={busyGoalId !== null}
+                      disabled={
+                        busyGoalId !== null || savingGoal
+                      }
                       onChange={() =>
                         toggleGoal(goal._id)
                       }
-                      aria-label={`Mark ${goal.title} complete`}
+                      aria-label={`Toggle completion for ${goal.title}`}
                     />
 
                     <div className="goal-item-info">
@@ -746,9 +844,26 @@ function Dashboard() {
                       </div>
                     </div>
 
+                    {/* NEW EDIT BUTTON */}
                     <button
+                      type="button"
+                      className="edit-goal-btn"
+                      disabled={
+                        busyGoalId !== null || savingGoal
+                      }
+                      onClick={() => editGoal(goal)}
+                      aria-label={`Edit ${goal.title}`}
+                    >
+                      ✏️ Edit
+                    </button>
+
+                    {/* DELETE BUTTON */}
+                    <button
+                      type="button"
                       className="delete-goal-btn"
-                      disabled={busyGoalId !== null}
+                      disabled={
+                        busyGoalId !== null || savingGoal
+                      }
                       onClick={() =>
                         deleteGoal(goal._id)
                       }
@@ -796,10 +911,7 @@ function Dashboard() {
                   >
 
                     <div>
-                      <strong>
-                        {goal.title}
-                      </strong>
-
+                      <strong>{goal.title}</strong>
                       <p>{goal.category}</p>
                     </div>
 
