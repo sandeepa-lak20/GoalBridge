@@ -5,9 +5,48 @@ import "./Dashboard.css";
 
 const API_URL = "http://localhost:5000/api/goals";
 
+// Calculate the deadline status of a goal
+function getDeadlineStatus(goal) {
+  if (goal.completed) {
+    return "Completed";
+  }
+
+  if (!goal.deadline) {
+    return "No Deadline";
+  }
+
+  const now = new Date();
+
+  const todayUTC = Date.UTC(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  const [year, month, day] = goal.deadline
+    .split("-")
+    .map(Number);
+
+  const deadlineUTC = Date.UTC(year, month - 1, day);
+
+  const daysLeft = Math.round(
+    (deadlineUTC - todayUTC) / (1000 * 60 * 60 * 24)
+  );
+
+  if (daysLeft < 0) return "Overdue";
+  if (daysLeft === 0) return "Due Today";
+  if (daysLeft <= 3) return "Due Soon";
+
+  return "Upcoming";
+}
+
 function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
+  // Deadline filtering and sorting
+  const [deadlineFilter, setDeadlineFilter] = useState("All");
+  const [goalSort, setGoalSort] = useState("deadline");
 
   let user = null;
 
@@ -36,7 +75,7 @@ function Dashboard() {
   const [busyGoalId, setBusyGoalId] = useState(null);
   const [goalError, setGoalError] = useState("");
 
-  // NEW: Store the ID of the goal being edited
+  // Store the ID of the goal being edited
   const [editingGoalId, setEditingGoalId] = useState(null);
 
   // Helper for authenticated backend requests
@@ -135,7 +174,7 @@ function Dashboard() {
     setGoalTitle("");
     setGoalDescription("");
     setGoalCategory("Learning");
-     setGoalPriority("Medium");
+    setGoalPriority("Medium");
     setGoalDate("");
     setEditingGoalId(null);
     setShowForm(false);
@@ -149,7 +188,7 @@ function Dashboard() {
     scrollToSection("my-goals");
   }
 
-  // NEW: Open form with existing goal details
+  // Open form with existing goal details
   function editGoal(goal) {
     if (savingGoal || busyGoalId) return;
 
@@ -184,7 +223,7 @@ function Dashboard() {
       };
 
       if (editingGoalId) {
-        // UPDATE existing goal using PUT
+        // Update existing goal
         const data = await goalRequest(
           `/${editingGoalId}`,
           {
@@ -201,7 +240,7 @@ function Dashboard() {
           )
         );
       } else {
-        // CREATE new goal using POST
+        // Create new goal
         const data = await goalRequest("", {
           method: "POST",
           body: JSON.stringify({
@@ -281,7 +320,6 @@ function Dashboard() {
         )
       );
 
-      // Close edit form if the deleted goal was being edited
       if (editingGoalId === id) {
         resetGoalForm();
       }
@@ -309,13 +347,25 @@ function Dashboard() {
     });
   }
 
-  // Calculate dashboard statistics
+  // Dashboard statistics
   const activeGoals = goals.filter(
     (goal) => !goal.completed
   ).length;
 
   const completedGoals = goals.filter(
     (goal) => goal.completed
+  ).length;
+
+  const overdueGoals = goals.filter(
+    (goal) => getDeadlineStatus(goal) === "Overdue"
+  ).length;
+
+  const dueTodayGoals = goals.filter(
+    (goal) => getDeadlineStatus(goal) === "Due Today"
+  ).length;
+
+  const dueSoonGoals = goals.filter(
+    (goal) => getDeadlineStatus(goal) === "Due Soon"
   ).length;
 
   const progress = goals.length
@@ -332,6 +382,7 @@ function Dashboard() {
     String(now.getDate()).padStart(2, "0"),
   ].join("-");
 
+  // Upcoming deadlines
   const upcomingGoals = goals
     .filter(
       (goal) => !goal.completed && goal.deadline
@@ -339,6 +390,34 @@ function Dashboard() {
     .sort((a, b) =>
       a.deadline.localeCompare(b.deadline)
     );
+
+  // Filter and sort goals
+  const filteredGoals = goals
+    .filter((goal) => {
+      if (deadlineFilter === "All") {
+        return true;
+      }
+
+      return getDeadlineStatus(goal) === deadlineFilter;
+    })
+    .sort((a, b) => {
+      if (goalSort === "priority") {
+        const priorityOrder = {
+          High: 1,
+          Medium: 2,
+          Low: 3,
+        };
+
+        return (
+          (priorityOrder[a.priority || "Medium"] ?? 2) -
+          (priorityOrder[b.priority || "Medium"] ?? 2)
+        );
+      }
+
+      return (a.deadline || "9999-12-31").localeCompare(
+        b.deadline || "9999-12-31"
+      );
+    });
 
   const stats = [
     {
@@ -519,6 +598,37 @@ function Dashboard() {
 
           </section>
 
+          {/* SMART DEADLINE SUMMARY */}
+          <section className="dashboard-section">
+            <h2>📅 Deadline Overview</h2>
+
+            <p className="section-subtitle">
+              See which goals need your attention.
+            </p>
+
+            <div className="deadline-summary">
+              <div className="deadline-summary-card overdue-card">
+                <h3>{overdueGoals}</h3>
+                <p>Overdue Goals</p>
+              </div>
+
+              <div className="deadline-summary-card today-card">
+                <h3>{dueTodayGoals}</h3>
+                <p>Due Today</p>
+              </div>
+
+              <div className="deadline-summary-card soon-card">
+                <h3>{dueSoonGoals}</h3>
+                <p>Due Soon</p>
+              </div>
+
+              <div className="deadline-summary-card completed-card">
+                <h3>{completedGoals}</h3>
+                <p>Completed Goals</p>
+              </div>
+            </div>
+          </section>
+
           {/* OVERALL PROGRESS */}
           <section className="overall-progress-card">
 
@@ -648,6 +758,52 @@ function Dashboard() {
 
             </div>
 
+            {/* FILTER AND SORT CONTROLS */}
+            <div className="goal-filter-bar">
+              <div>
+                <label htmlFor="deadline-filter">
+                  Filter by Status
+                </label>
+
+                <select
+                  id="deadline-filter"
+                  value={deadlineFilter}
+                  onChange={(e) =>
+                    setDeadlineFilter(e.target.value)
+                  }
+                >
+                  <option value="All">All Goals</option>
+                  <option value="Overdue">Overdue</option>
+                  <option value="Due Today">Due Today</option>
+                  <option value="Due Soon">Due Soon</option>
+                  <option value="Upcoming">Upcoming</option>
+                  <option value="Completed">Completed</option>
+                  <option value="No Deadline">No Deadline</option>
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="goal-sort">
+                  Sort Goals
+                </label>
+
+                <select
+                  id="goal-sort"
+                  value={goalSort}
+                  onChange={(e) =>
+                    setGoalSort(e.target.value)
+                  }
+                >
+                  <option value="deadline">
+                    Nearest Deadline
+                  </option>
+                  <option value="priority">
+                    Highest Priority
+                  </option>
+                </select>
+              </div>
+            </div>
+
             {/* API ERROR */}
             {goalError && (
               <p
@@ -735,7 +891,6 @@ function Dashboard() {
                   }
                 />
 
-                
                 <label htmlFor="goal-priority">
                   Goal Priority
                 </label>
@@ -743,14 +898,20 @@ function Dashboard() {
                 <select
                   id="goal-priority"
                   value={goalPriority}
-                  onChange={(e) => setGoalPriority(e.target.value)}
+                  onChange={(e) =>
+                    setGoalPriority(e.target.value)
+                  }
                 >
-                  <option value="High">High Priority</option>
-                  <option value="Medium">Medium Priority</option>
-                  <option value="Low">Low Priority</option>
+                  <option value="High">
+                    High Priority
+                  </option>
+                  <option value="Medium">
+                    Medium Priority
+                  </option>
+                  <option value="Low">
+                    Low Priority
+                  </option>
                 </select>
-
-
 
                 <div className="goal-form-actions">
                   <button
@@ -806,11 +967,24 @@ function Dashboard() {
                 </p>
 
               </div>
+            ) : filteredGoals.length === 0 ? (
+              <div className="goals-empty">
+                <div className="empty-goal-icon">
+                  🔎
+                </div>
+
+                <h3>No matching goals</h3>
+
+                <p>
+                  No goals match the selected status.
+                  Try changing the filter.
+                </p>
+              </div>
             ) : (
 
               <div className="goals-list">
 
-                {goals.map((goal) => (
+                {filteredGoals.map((goal) => (
                   <div
                     className="goal-list-item"
                     key={goal._id}
@@ -850,7 +1024,6 @@ function Dashboard() {
                           {goal.category}
                         </span>
 
-                        
                         <span
                           className={`goal-priority priority-${(
                             goal.priority || "Medium"
@@ -858,7 +1031,6 @@ function Dashboard() {
                         >
                           {goal.priority || "Medium"} Priority
                         </span>
-
 
                         {goal.deadline && (
                           <span>
@@ -872,10 +1044,18 @@ function Dashboard() {
                             : "In Progress"}
                         </span>
 
+                        <span
+                          className={`deadline-status status-${getDeadlineStatus(goal)
+                            .toLowerCase()
+                            .replace(/\s+/g, "-")}`}
+                        >
+                          {getDeadlineStatus(goal)}
+                        </span>
+
                       </div>
                     </div>
 
-                    {/* NEW EDIT BUTTON */}
+                    {/* EDIT BUTTON */}
                     <button
                       type="button"
                       className="edit-goal-btn"
