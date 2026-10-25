@@ -27,6 +27,7 @@ function Dashboard() {
   const [goalDescription, setGoalDescription] = useState("");
   const [goalDate, setGoalDate] = useState("");
   const [goalCategory, setGoalCategory] = useState("Learning");
+  const [goalPriority, setGoalPriority] = useState("Medium");
   const [activeSection, setActiveSection] = useState("dashboard");
 
   // API states
@@ -134,6 +135,7 @@ function Dashboard() {
     setGoalTitle("");
     setGoalDescription("");
     setGoalCategory("Learning");
+     setGoalPriority("Medium");
     setGoalDate("");
     setEditingGoalId(null);
     setShowForm(false);
@@ -155,6 +157,7 @@ function Dashboard() {
     setGoalTitle(goal.title);
     setGoalDescription(goal.description || "");
     setGoalCategory(goal.category || "Learning");
+    setGoalPriority(goal.priority || "Medium");
     setGoalDate(goal.deadline || "");
     setGoalError("");
     setShowForm(true);
@@ -177,6 +180,7 @@ function Dashboard() {
         description: goalDescription.trim(),
         category: goalCategory,
         deadline: goalDate,
+        priority: goalPriority,
       };
 
       if (editingGoalId) {
@@ -731,6 +735,23 @@ function Dashboard() {
                   }
                 />
 
+                
+                <label htmlFor="goal-priority">
+                  Goal Priority
+                </label>
+
+                <select
+                  id="goal-priority"
+                  value={goalPriority}
+                  onChange={(e) => setGoalPriority(e.target.value)}
+                >
+                  <option value="High">High Priority</option>
+                  <option value="Medium">Medium Priority</option>
+                  <option value="Low">Low Priority</option>
+                </select>
+
+
+
                 <div className="goal-form-actions">
                   <button
                     type="submit"
@@ -828,6 +849,16 @@ function Dashboard() {
                         <span>
                           {goal.category}
                         </span>
+
+                        
+                        <span
+                          className={`goal-priority priority-${(
+                            goal.priority || "Medium"
+                          ).toLowerCase()}`}
+                        >
+                          {goal.priority || "Medium"} Priority
+                        </span>
+
 
                         {goal.deadline && (
                           <span>

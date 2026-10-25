@@ -1,4 +1,5 @@
 
+
 import mongoose from "mongoose";
 
 const goalSchema = new mongoose.Schema(
@@ -33,6 +34,13 @@ const goalSchema = new mongoose.Schema(
         "Personal Development",
       ],
       default: "Learning",
+    },
+
+    // NEW: Goal Priority
+    priority: {
+      type: String,
+      enum: ["High", "Medium", "Low"],
+      default: "Medium",
     },
 
     deadline: {

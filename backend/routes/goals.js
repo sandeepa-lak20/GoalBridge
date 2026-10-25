@@ -31,6 +31,7 @@ function validateGoal(body, partial = false) {
     "category",
     "deadline",
     "completed",
+    "priority",
   ];
 
   const keys = Object.keys(body);
@@ -98,6 +99,14 @@ function validateGoal(body, partial = false) {
     return "Completed must be true or false.";
   }
 
+  
+  if (
+    "priority" in body &&
+    !["High", "Medium", "Low"].includes(body.priority)
+  ) {
+    return "Invalid goal priority.";
+  }
+
   return null;
 }
 
@@ -136,6 +145,7 @@ router.post("/", async (req, res) => {
       title: req.body.title.trim(),
       description: req.body.description ?? "",
       category: req.body.category ?? "Learning",
+      priority: req.body.priority ?? "Medium",
       deadline: req.body.deadline ?? "",
       completed: req.body.completed ?? false,
     });
@@ -210,6 +220,7 @@ router.put("/:id", async (req, res) => {
       "category",
       "deadline",
       "completed",
+      "priority",
     ];
 
     for (const field of allowedFields) {
