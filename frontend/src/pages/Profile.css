@@ -255,3 +255,29 @@
 .password-form .profile-actions {
   justify-content: flex-start;
 }
+
+/* Fix My Profile heading and name visibility */
+
+.profile-heading h1 {
+  color: #1e2b5c !important;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.profile-identity h2 {
+  color: #1e2b5c !important;
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.profile-heading p {
+  color: #7b849f;
+}
+
+.profile-identity p {
+  color: #7b849f;
+}
+
+.profile-panel {
+  background-color: #ffffff;
+}

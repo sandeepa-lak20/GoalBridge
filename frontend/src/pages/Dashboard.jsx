@@ -542,7 +542,7 @@ function Dashboard() {
         {/* HEADER */}
         <header className="dashboard-header">
           <div className="dashboard-brand">
-            🌉 Goal<span>Bridge</span>
+            🌉 GoalBridge
           </div>
 
           <button

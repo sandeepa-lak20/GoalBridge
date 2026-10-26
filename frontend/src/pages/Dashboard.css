@@ -17,6 +17,11 @@
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+  align-self: flex-start;
 }
 
 .sidebar-logo {
@@ -139,7 +144,6 @@
 .dashboard-page {
   flex: 1;
   min-width: 0;
-  background: #f8f8ff;
   text-align: left;
 }
 
@@ -148,14 +152,20 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 5%;
-  background: white;
+   background: linear-gradient(
+    100deg,
+    #d75ccf,
+    #c7a1c5,
+    #087fbd,
+    #13b8a6
+  );
   border-bottom: 1px solid #eeebf8;
 }
 
 .dashboard-brand {
   font-size: 24px;
   font-weight: 800;
-  color: #29355f;
+  color: #060708;
 }
 
 .logout-btn {
@@ -176,6 +186,7 @@
   max-width: 1200px;
   margin: auto;
   padding: 45px 25px;
+  min-width: 0;
 }
 
 .dashboard-welcome {

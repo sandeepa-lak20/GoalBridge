@@ -172,7 +172,7 @@ export default function Profile({ onSaved }) {
         <span className="dashboard-tag">
           YOUR ACCOUNT
         </span>
-
+        
         <h1>My Profile</h1>
 
         <p>
