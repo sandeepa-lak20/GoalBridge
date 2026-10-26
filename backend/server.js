@@ -7,6 +7,7 @@ import authRoutes from "./routes/auth.js";
 import goalRoutes from "./routes/goals.js";
 import profileRoutes from "./routes/profile.js";
 import changePasswordRoutes from "./routes/changePassword.js";
+import careerPathRoutes from "./routes/careerPaths.js";
 
 dotenv.config();
 
@@ -39,6 +40,9 @@ app.use("/api/profile", profileRoutes);
 
 // New change password routes
 app.use("/api/profile/change-password", changePasswordRoutes);
+
+// Career paths using ESCO API
+app.use("/api/career-paths", careerPathRoutes);
 
 // Invalid API routes
 app.use((req, res) => {

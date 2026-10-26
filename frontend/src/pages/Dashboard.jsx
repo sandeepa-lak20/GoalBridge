@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import Profile from "./Profile";
+import CareerPaths from "./CareerPaths";
 
 const API_URL = "http://localhost:5000/api/goals";
 
@@ -58,7 +59,7 @@ function Dashboard() {
   }
 
   const [profileName, setProfileName] = useState(
-  user?.firstName || "User"
+    user?.firstName || "User"
   );
 
   const firstName = profileName;
@@ -73,6 +74,9 @@ function Dashboard() {
   const [goalCategory, setGoalCategory] = useState("Learning");
   const [goalPriority, setGoalPriority] = useState("Medium");
   const [activeSection, setActiveSection] = useState("dashboard");
+
+  // Selected career
+  const [dashboardCareer, setDashboardCareer] = useState(null);
 
   // API states
   const [loadingGoals, setLoadingGoals] = useState(true);
@@ -173,6 +177,48 @@ function Dashboard() {
       cancelled = true;
     };
   }, [token, userId]);
+
+  // Fetch selected career whenever dashboard becomes visible
+  useEffect(() => {
+    if (!token || activeSection !== "dashboard") return;
+
+    let cancelled = false;
+
+    async function fetchSelectedCareer() {
+      try {
+        const response = await fetch(
+          "http://localhost:5000/api/career-paths/selected",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("Failed to load selected career.");
+        }
+
+        const data = await response.json();
+
+        if (!cancelled) {
+          setDashboardCareer(
+            data.selectedCareer?.uri
+              ? data.selectedCareer
+              : null
+          );
+        }
+      } catch (error) {
+        console.error("Career loading error:", error);
+      }
+    }
+
+    fetchSelectedCareer();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token, activeSection]);
 
   // Clear form fields and editing state
   function resetGoalForm() {
@@ -428,7 +474,7 @@ function Dashboard() {
     {
       icon: "🧭",
       title: "Career Path",
-      value: "Not selected",
+      value: dashboardCareer?.title || "Not selected",
     },
     {
       icon: "🎯",
@@ -558,605 +604,608 @@ function Dashboard() {
           id="dashboard"
         >
           {activeSection === "profile" ? (
-          <Profile
-            onSaved={(updatedUser) =>
-              setProfileName(updatedUser.firstName)
-            }
-          />
-        ) : (
-          <>
-          
+            <Profile
+              onSaved={(updatedUser) =>
+                setProfileName(updatedUser.firstName)
+              }
+            />
+          ) : activeSection === "career-paths" ? (
+            <CareerPaths
+              onCareerSelected={setDashboardCareer}
+            />
+          ) : (
+            <>
 
-          {/* WELCOME SECTION */}
-          <section className="dashboard-welcome">
+              {/* WELCOME SECTION */}
+              <section className="dashboard-welcome">
 
-            <span className="dashboard-tag">
-              YOUR PERSONAL DASHBOARD
-            </span>
-
-            <h1>
-              Welcome back, {firstName}! 👋
-            </h1>
-
-            <p>
-              Every great career starts with a plan.
-              Let's take the next step toward your future.
-            </p>
-
-          </section>
-
-          {/* CAREER OVERVIEW */}
-          <section className="dashboard-section">
-
-            <h2>Your Career Overview</h2>
-
-            <p className="section-subtitle">
-              Here is a quick look at your career journey.
-            </p>
-
-            <div className="dashboard-stats">
-              {stats.map((stat) => (
-                <div
-                  className="stat-card"
-                  key={stat.title}
-                >
-                  <div className="stat-icon">
-                    {stat.icon}
-                  </div>
-
-                  <p>{stat.title}</p>
-                  <h3>{stat.value}</h3>
-                </div>
-              ))}
-            </div>
-
-          </section>
-
-          {/* SMART DEADLINE SUMMARY */}
-          <section className="dashboard-section">
-            <h2>📅 Deadline Overview</h2>
-
-            <p className="section-subtitle">
-              See which goals need your attention.
-            </p>
-
-            <div className="deadline-summary">
-              <div className="deadline-summary-card overdue-card">
-                <h3>{overdueGoals}</h3>
-                <p>Overdue Goals</p>
-              </div>
-
-              <div className="deadline-summary-card today-card">
-                <h3>{dueTodayGoals}</h3>
-                <p>Due Today</p>
-              </div>
-
-              <div className="deadline-summary-card soon-card">
-                <h3>{dueSoonGoals}</h3>
-                <p>Due Soon</p>
-              </div>
-
-              <div className="deadline-summary-card completed-card">
-                <h3>{completedGoals}</h3>
-                <p>Completed Goals</p>
-              </div>
-            </div>
-          </section>
-
-          {/* OVERALL PROGRESS */}
-          <section className="overall-progress-card">
-
-            <div className="progress-heading">
-              <div>
-                <h2>Overall Goal Progress</h2>
-                <p>See how far you have come.</p>
-              </div>
-
-              <strong>{progress}%</strong>
-            </div>
-
-            <div className="progress-track">
-              <div
-                className="progress-fill"
-                style={{
-                  width: `${progress}%`,
-                }}
-              />
-            </div>
-
-            <p>
-              {completedGoals} of {goals.length} goals completed
-            </p>
-
-          </section>
-
-          {/* GETTING STARTED AND JOURNEY */}
-          <section className="dashboard-bottom">
-
-            <div className="getting-started-card">
-
-              <span className="dashboard-tag">
-                GET STARTED
-              </span>
-
-              <h2>
-                Start your career journey 🚀
-              </h2>
-
-              <p>
-                Set your first career goal and start building
-                a clear path toward your dream job.
-              </p>
-
-              <button
-                className="start-goal-btn"
-                onClick={openAddGoalForm}
-              >
-                + Create Your First Goal
-              </button>
-
-            </div>
-
-            <div className="journey-card">
-
-              <h2>Your Journey</h2>
-
-              <div className="journey-item">
-                <span>✓</span>
-
-                <div>
-                  <strong>Create your account</strong>
-                  <p>Welcome to GoalBridge!</p>
-                </div>
-              </div>
-
-              <div className="journey-item">
-                <span>
-                  {goals.length > 0 ? "✓" : "2"}
+                <span className="dashboard-tag">
+                  YOUR PERSONAL DASHBOARD
                 </span>
 
-                <div>
-                  <strong>Set your first goal</strong>
+                <h1>
+                  Welcome back, {firstName}! 👋
+                </h1>
 
-                  <p>
-                    {goals.length > 0
-                      ? "Your goal journey has started!"
-                      : "Plan what you want to achieve."}
-                  </p>
-                </div>
-              </div>
+                <p>
+                  Every great career starts with a plan.
+                  Let's take the next step toward your future.
+                </p>
 
-              <div className="journey-item">
-                <span>
-                  {completedGoals > 0 ? "✓" : "3"}
-                </span>
+              </section>
 
-                <div>
-                  <strong>Achieve your goals</strong>
-                  <p>Track your progress and grow.</p>
-                </div>
-              </div>
+              {/* CAREER OVERVIEW */}
+              <section className="dashboard-section">
 
-            </div>
-          </section>
-
-          {/* MY GOALS */}
-          <section
-            className="dashboard-section my-goals-section"
-            id="my-goals"
-          >
-
-            <div className="goals-heading">
-
-              <div>
-                <h2>🎯 My Goals</h2>
+                <h2>Your Career Overview</h2>
 
                 <p className="section-subtitle">
-                  Manage your personal and career goals.
+                  Here is a quick look at your career journey.
                 </p>
-              </div>
 
-              <button
-                className="add-goal-btn"
-                disabled={savingGoal}
-                onClick={() => {
-                  if (showForm) {
-                    resetGoalForm();
-                  } else {
-                    openAddGoalForm();
-                  }
-                }}
-              >
-                {showForm ? "Cancel" : "+ Add Goal"}
-              </button>
+                <div className="dashboard-stats">
+                  {stats.map((stat) => (
+                    <div
+                      className="stat-card"
+                      key={stat.title}
+                    >
+                      <div className="stat-icon">
+                        {stat.icon}
+                      </div>
 
-            </div>
+                      <p>{stat.title}</p>
+                      <h3>{stat.value}</h3>
+                    </div>
+                  ))}
+                </div>
 
-            {/* FILTER AND SORT CONTROLS */}
-            <div className="goal-filter-bar">
-              <div>
-                <label htmlFor="deadline-filter">
-                  Filter by Status
-                </label>
+              </section>
 
-                <select
-                  id="deadline-filter"
-                  value={deadlineFilter}
-                  onChange={(e) =>
-                    setDeadlineFilter(e.target.value)
-                  }
-                >
-                  <option value="All">All Goals</option>
-                  <option value="Overdue">Overdue</option>
-                  <option value="Due Today">Due Today</option>
-                  <option value="Due Soon">Due Soon</option>
-                  <option value="Upcoming">Upcoming</option>
-                  <option value="Completed">Completed</option>
-                  <option value="No Deadline">No Deadline</option>
-                </select>
-              </div>
+              {/* SMART DEADLINE SUMMARY */}
+              <section className="dashboard-section">
+                <h2>📅 Deadline Overview</h2>
 
-              <div>
-                <label htmlFor="goal-sort">
-                  Sort Goals
-                </label>
+                <p className="section-subtitle">
+                  See which goals need your attention.
+                </p>
 
-                <select
-                  id="goal-sort"
-                  value={goalSort}
-                  onChange={(e) =>
-                    setGoalSort(e.target.value)
-                  }
-                >
-                  <option value="deadline">
-                    Nearest Deadline
-                  </option>
-                  <option value="priority">
-                    Highest Priority
-                  </option>
-                </select>
-              </div>
-            </div>
+                <div className="deadline-summary">
+                  <div className="deadline-summary-card overdue-card">
+                    <h3>{overdueGoals}</h3>
+                    <p>Overdue Goals</p>
+                  </div>
 
-            {/* API ERROR */}
-            {goalError && (
-              <p
-                role="alert"
-                style={{
-                  color: "#dc2626",
-                  marginBottom: "15px",
-                }}
-              >
-                {goalError}
-              </p>
-            )}
+                  <div className="deadline-summary-card today-card">
+                    <h3>{dueTodayGoals}</h3>
+                    <p>Due Today</p>
+                  </div>
 
-            {/* ADD / EDIT GOAL FORM */}
-            {showForm && (
-              <form
-                className="goal-form"
-                onSubmit={saveGoal}
-              >
+                  <div className="deadline-summary-card soon-card">
+                    <h3>{dueSoonGoals}</h3>
+                    <p>Due Soon</p>
+                  </div>
 
-                <h3>
-                  {editingGoalId
-                    ? "✏️ Edit Goal"
-                    : "Create a New Goal"}
-                </h3>
+                  <div className="deadline-summary-card completed-card">
+                    <h3>{completedGoals}</h3>
+                    <p>Completed Goals</p>
+                  </div>
+                </div>
+              </section>
 
-                <label htmlFor="goal-title">
-                  Goal Title
-                </label>
+              {/* OVERALL PROGRESS */}
+              <section className="overall-progress-card">
 
-                <input
-                  id="goal-title"
-                  type="text"
-                  placeholder="Example: Learn React"
-                  value={goalTitle}
-                  onChange={(e) =>
-                    setGoalTitle(e.target.value)
-                  }
-                  required
-                  maxLength={100}
-                />
+                <div className="progress-heading">
+                  <div>
+                    <h2>Overall Goal Progress</h2>
+                    <p>See how far you have come.</p>
+                  </div>
 
-                <label htmlFor="goal-description">
-                  Description
-                </label>
+                  <strong>{progress}%</strong>
+                </div>
 
-                <textarea
-                  id="goal-description"
-                  placeholder="What do you want to achieve?"
-                  value={goalDescription}
-                  onChange={(e) =>
-                    setGoalDescription(e.target.value)
-                  }
-                  rows={3}
-                  maxLength={500}
-                />
+                <div className="progress-track">
+                  <div
+                    className="progress-fill"
+                    style={{
+                      width: `${progress}%`,
+                    }}
+                  />
+                </div>
 
-                <label htmlFor="goal-category">
-                  Category
-                </label>
+                <p>
+                  {completedGoals} of {goals.length} goals completed
+                </p>
 
-                <select
-                  id="goal-category"
-                  value={goalCategory}
-                  onChange={(e) =>
-                    setGoalCategory(e.target.value)
-                  }
-                >
-                  <option>Learning</option>
-                  <option>Career</option>
-                  <option>Projects</option>
-                  <option>Personal Development</option>
-                </select>
+              </section>
 
-                <label htmlFor="goal-date">
-                  Target Date
-                </label>
+              {/* GETTING STARTED AND JOURNEY */}
+              <section className="dashboard-bottom">
 
-                <input
-                  id="goal-date"
-                  type="date"
-                  value={goalDate}
-                  onChange={(e) =>
-                    setGoalDate(e.target.value)
-                  }
-                />
+                <div className="getting-started-card">
 
-                <label htmlFor="goal-priority">
-                  Goal Priority
-                </label>
+                  <span className="dashboard-tag">
+                    GET STARTED
+                  </span>
 
-                <select
-                  id="goal-priority"
-                  value={goalPriority}
-                  onChange={(e) =>
-                    setGoalPriority(e.target.value)
-                  }
-                >
-                  <option value="High">
-                    High Priority
-                  </option>
-                  <option value="Medium">
-                    Medium Priority
-                  </option>
-                  <option value="Low">
-                    Low Priority
-                  </option>
-                </select>
+                  <h2>
+                    Start your career journey 🚀
+                  </h2>
 
-                <div className="goal-form-actions">
+                  <p>
+                    Set your first career goal and start building
+                    a clear path toward your dream job.
+                  </p>
+
                   <button
-                    type="submit"
-                    className="save-goal-btn"
-                    disabled={savingGoal}
+                    className="start-goal-btn"
+                    onClick={openAddGoalForm}
                   >
-                    {savingGoal
-                      ? "Saving..."
-                      : editingGoalId
-                      ? "Update Goal"
-                      : "Save Goal"}
+                    + Create Your First Goal
                   </button>
 
-                  {editingGoalId && (
-                    <button
-                      type="button"
-                      className="cancel-edit-btn"
-                      disabled={savingGoal}
-                      onClick={resetGoalForm}
+                </div>
+
+                <div className="journey-card">
+
+                  <h2>Your Journey</h2>
+
+                  <div className="journey-item">
+                    <span>✓</span>
+
+                    <div>
+                      <strong>Create your account</strong>
+                      <p>Welcome to GoalBridge!</p>
+                    </div>
+                  </div>
+
+                  <div className="journey-item">
+                    <span>
+                      {goals.length > 0 ? "✓" : "2"}
+                    </span>
+
+                    <div>
+                      <strong>Set your first goal</strong>
+
+                      <p>
+                        {goals.length > 0
+                          ? "Your goal journey has started!"
+                          : "Plan what you want to achieve."}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="journey-item">
+                    <span>
+                      {completedGoals > 0 ? "✓" : "3"}
+                    </span>
+
+                    <div>
+                      <strong>Achieve your goals</strong>
+                      <p>Track your progress and grow.</p>
+                    </div>
+                  </div>
+
+                </div>
+              </section>
+
+              {/* MY GOALS */}
+              <section
+                className="dashboard-section my-goals-section"
+                id="my-goals"
+              >
+
+                <div className="goals-heading">
+
+                  <div>
+                    <h2>🎯 My Goals</h2>
+
+                    <p className="section-subtitle">
+                      Manage your personal and career goals.
+                    </p>
+                  </div>
+
+                  <button
+                    className="add-goal-btn"
+                    disabled={savingGoal}
+                    onClick={() => {
+                      if (showForm) {
+                        resetGoalForm();
+                      } else {
+                        openAddGoalForm();
+                      }
+                    }}
+                  >
+                    {showForm ? "Cancel" : "+ Add Goal"}
+                  </button>
+
+                </div>
+
+                {/* FILTER AND SORT CONTROLS */}
+                <div className="goal-filter-bar">
+                  <div>
+                    <label htmlFor="deadline-filter">
+                      Filter by Status
+                    </label>
+
+                    <select
+                      id="deadline-filter"
+                      value={deadlineFilter}
+                      onChange={(e) =>
+                        setDeadlineFilter(e.target.value)
+                      }
                     >
-                      Cancel Editing
-                    </button>
-                  )}
+                      <option value="All">All Goals</option>
+                      <option value="Overdue">Overdue</option>
+                      <option value="Due Today">Due Today</option>
+                      <option value="Due Soon">Due Soon</option>
+                      <option value="Upcoming">Upcoming</option>
+                      <option value="Completed">Completed</option>
+                      <option value="No Deadline">No Deadline</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label htmlFor="goal-sort">
+                      Sort Goals
+                    </label>
+
+                    <select
+                      id="goal-sort"
+                      value={goalSort}
+                      onChange={(e) =>
+                        setGoalSort(e.target.value)
+                      }
+                    >
+                      <option value="deadline">
+                        Nearest Deadline
+                      </option>
+                      <option value="priority">
+                        Highest Priority
+                      </option>
+                    </select>
+                  </div>
                 </div>
 
-              </form>
-            )}
+                {/* API ERROR */}
+                {goalError && (
+                  <p
+                    role="alert"
+                    style={{
+                      color: "#dc2626",
+                      marginBottom: "15px",
+                    }}
+                  >
+                    {goalError}
+                  </p>
+                )}
 
-            {/* GOALS LIST */}
-            {loadingGoals ? (
-              <div className="goals-empty">
-                <p>Loading your goals...</p>
-              </div>
-            ) : goalError && goals.length === 0 ? (
-              <div className="goals-empty">
-                <p>
-                  Could not load goals. Check the error above.
-                </p>
-              </div>
-            ) : goals.length === 0 ? (
-              <div className="goals-empty">
-
-                <div className="empty-goal-icon">
-                  🎯
-                </div>
-
-                <h3>No goals added yet</h3>
-
-                <p>
-                  Your future starts with one goal.
-                  Add your first goal to begin.
-                </p>
-
-              </div>
-            ) : filteredGoals.length === 0 ? (
-              <div className="goals-empty">
-                <div className="empty-goal-icon">
-                  🔎
-                </div>
-
-                <h3>No matching goals</h3>
-
-                <p>
-                  No goals match the selected status.
-                  Try changing the filter.
-                </p>
-              </div>
-            ) : (
-
-              <div className="goals-list">
-
-                {filteredGoals.map((goal) => (
-                  <div
-                    className="goal-list-item"
-                    key={goal._id}
+                {/* ADD / EDIT GOAL FORM */}
+                {showForm && (
+                  <form
+                    className="goal-form"
+                    onSubmit={saveGoal}
                   >
 
+                    <h3>
+                      {editingGoalId
+                        ? "✏️ Edit Goal"
+                        : "Create a New Goal"}
+                    </h3>
+
+                    <label htmlFor="goal-title">
+                      Goal Title
+                    </label>
+
                     <input
-                      type="checkbox"
-                      checked={goal.completed}
-                      disabled={
-                        busyGoalId !== null || savingGoal
+                      id="goal-title"
+                      type="text"
+                      placeholder="Example: Learn React"
+                      value={goalTitle}
+                      onChange={(e) =>
+                        setGoalTitle(e.target.value)
                       }
-                      onChange={() =>
-                        toggleGoal(goal._id)
-                      }
-                      aria-label={`Toggle completion for ${goal.title}`}
+                      required
+                      maxLength={100}
                     />
 
-                    <div className="goal-item-info">
+                    <label htmlFor="goal-description">
+                      Description
+                    </label>
 
-                      <strong
-                        className={
-                          goal.completed
-                            ? "goal-done"
-                            : ""
-                        }
+                    <textarea
+                      id="goal-description"
+                      placeholder="What do you want to achieve?"
+                      value={goalDescription}
+                      onChange={(e) =>
+                        setGoalDescription(e.target.value)
+                      }
+                      rows={3}
+                      maxLength={500}
+                    />
+
+                    <label htmlFor="goal-category">
+                      Category
+                    </label>
+
+                    <select
+                      id="goal-category"
+                      value={goalCategory}
+                      onChange={(e) =>
+                        setGoalCategory(e.target.value)
+                      }
+                    >
+                      <option>Learning</option>
+                      <option>Career</option>
+                      <option>Projects</option>
+                      <option>Personal Development</option>
+                    </select>
+
+                    <label htmlFor="goal-date">
+                      Target Date
+                    </label>
+
+                    <input
+                      id="goal-date"
+                      type="date"
+                      value={goalDate}
+                      onChange={(e) =>
+                        setGoalDate(e.target.value)
+                      }
+                    />
+
+                    <label htmlFor="goal-priority">
+                      Goal Priority
+                    </label>
+
+                    <select
+                      id="goal-priority"
+                      value={goalPriority}
+                      onChange={(e) =>
+                        setGoalPriority(e.target.value)
+                      }
+                    >
+                      <option value="High">
+                        High Priority
+                      </option>
+                      <option value="Medium">
+                        Medium Priority
+                      </option>
+                      <option value="Low">
+                        Low Priority
+                      </option>
+                    </select>
+
+                    <div className="goal-form-actions">
+                      <button
+                        type="submit"
+                        className="save-goal-btn"
+                        disabled={savingGoal}
                       >
-                        {goal.title}
-                      </strong>
+                        {savingGoal
+                          ? "Saving..."
+                          : editingGoalId
+                          ? "Update Goal"
+                          : "Save Goal"}
+                      </button>
 
-                      {goal.description && (
-                        <p>{goal.description}</p>
+                      {editingGoalId && (
+                        <button
+                          type="button"
+                          className="cancel-edit-btn"
+                          disabled={savingGoal}
+                          onClick={resetGoalForm}
+                        >
+                          Cancel Editing
+                        </button>
                       )}
+                    </div>
 
-                      <div className="goal-meta">
+                  </form>
+                )}
 
-                        <span>
-                          {goal.category}
-                        </span>
+                {/* GOALS LIST */}
+                {loadingGoals ? (
+                  <div className="goals-empty">
+                    <p>Loading your goals...</p>
+                  </div>
+                ) : goalError && goals.length === 0 ? (
+                  <div className="goals-empty">
+                    <p>
+                      Could not load goals. Check the error above.
+                    </p>
+                  </div>
+                ) : goals.length === 0 ? (
+                  <div className="goals-empty">
+
+                    <div className="empty-goal-icon">
+                      🎯
+                    </div>
+
+                    <h3>No goals added yet</h3>
+
+                    <p>
+                      Your future starts with one goal.
+                      Add your first goal to begin.
+                    </p>
+
+                  </div>
+                ) : filteredGoals.length === 0 ? (
+                  <div className="goals-empty">
+                    <div className="empty-goal-icon">
+                      🔎
+                    </div>
+
+                    <h3>No matching goals</h3>
+
+                    <p>
+                      No goals match the selected status.
+                      Try changing the filter.
+                    </p>
+                  </div>
+                ) : (
+
+                  <div className="goals-list">
+
+                    {filteredGoals.map((goal) => (
+                      <div
+                        className="goal-list-item"
+                        key={goal._id}
+                      >
+
+                        <input
+                          type="checkbox"
+                          checked={goal.completed}
+                          disabled={
+                            busyGoalId !== null || savingGoal
+                          }
+                          onChange={() =>
+                            toggleGoal(goal._id)
+                          }
+                          aria-label={`Toggle completion for ${goal.title}`}
+                        />
+
+                        <div className="goal-item-info">
+
+                          <strong
+                            className={
+                              goal.completed
+                                ? "goal-done"
+                                : ""
+                            }
+                          >
+                            {goal.title}
+                          </strong>
+
+                          {goal.description && (
+                            <p>{goal.description}</p>
+                          )}
+
+                          <div className="goal-meta">
+
+                            <span>
+                              {goal.category}
+                            </span>
+
+                            <span
+                              className={`goal-priority priority-${(
+                                goal.priority || "Medium"
+                              ).toLowerCase()}`}
+                            >
+                              {goal.priority || "Medium"} Priority
+                            </span>
+
+                            {goal.deadline && (
+                              <span>
+                                📅 {goal.deadline}
+                              </span>
+                            )}
+
+                            <span
+                              className={`deadline-status status-${getDeadlineStatus(goal)
+                                .toLowerCase()
+                                .replace(/\s+/g, "-")}`}
+                            >
+                              {getDeadlineStatus(goal)}
+                            </span>
+
+                          </div>
+                        </div>
+
+                        {/* EDIT BUTTON */}
+                        <button
+                          type="button"
+                          className="edit-goal-btn"
+                          disabled={
+                            busyGoalId !== null || savingGoal
+                          }
+                          onClick={() => editGoal(goal)}
+                          aria-label={`Edit ${goal.title}`}
+                        >
+                          ✏️ Edit
+                        </button>
+
+                        {/* DELETE BUTTON */}
+                        <button
+                          type="button"
+                          className="delete-goal-btn"
+                          disabled={
+                            busyGoalId !== null || savingGoal
+                          }
+                          onClick={() =>
+                            deleteGoal(goal._id)
+                          }
+                          aria-label={`Delete ${goal.title}`}
+                        >
+                          ✕
+                        </button>
+
+                      </div>
+                    ))}
+
+                  </div>
+                )}
+
+              </section>
+
+              {/* UPCOMING DEADLINES */}
+              <section className="dashboard-section deadlines-section">
+
+                <h2>📅 Upcoming Deadlines</h2>
+
+                <p className="section-subtitle">
+                  Stay organized and complete your goals on time.
+                </p>
+
+                {loadingGoals ? (
+                  <div className="deadline-empty">
+                    <p>Loading deadlines...</p>
+                  </div>
+                ) : upcomingGoals.length === 0 ? (
+                  <div className="deadline-empty">
+
+                    <span>🗓️</span>
+                    <p>No upcoming deadlines yet.</p>
+
+                  </div>
+                ) : (
+
+                  <div className="deadline-list">
+
+                    {upcomingGoals.map((goal) => (
+                      <div
+                        className="deadline-item"
+                        key={goal._id}
+                      >
+
+                        <div>
+                          <strong>{goal.title}</strong>
+                          <p>{goal.category}</p>
+                        </div>
 
                         <span
-                          className={`goal-priority priority-${(
-                            goal.priority || "Medium"
-                          ).toLowerCase()}`}
+                          className={
+                            goal.deadline < today
+                              ? "deadline-overdue"
+                              : ""
+                          }
                         >
-                          {goal.priority || "Medium"} Priority
-                        </span>
+                          {goal.deadline < today
+                            ? "Overdue: "
+                            : ""}
 
-                        {goal.deadline && (
-                          <span>
-                            📅 {goal.deadline}
-                          </span>
-                        )}
-
-                        <span
-                          className={`deadline-status status-${getDeadlineStatus(goal)
-                            .toLowerCase()
-                            .replace(/\s+/g, "-")}`}
-                        >
-                          {getDeadlineStatus(goal)}
+                          {goal.deadline}
                         </span>
 
                       </div>
-                    </div>
-
-                    {/* EDIT BUTTON */}
-                    <button
-                      type="button"
-                      className="edit-goal-btn"
-                      disabled={
-                        busyGoalId !== null || savingGoal
-                      }
-                      onClick={() => editGoal(goal)}
-                      aria-label={`Edit ${goal.title}`}
-                    >
-                      ✏️ Edit
-                    </button>
-
-                    {/* DELETE BUTTON */}
-                    <button
-                      type="button"
-                      className="delete-goal-btn"
-                      disabled={
-                        busyGoalId !== null || savingGoal
-                      }
-                      onClick={() =>
-                        deleteGoal(goal._id)
-                      }
-                      aria-label={`Delete ${goal.title}`}
-                    >
-                      ✕
-                    </button>
+                    ))}
 
                   </div>
-                ))}
+                )}
 
-              </div>
-            )}
-
-          </section>
-
-          {/* UPCOMING DEADLINES */}
-          <section className="dashboard-section deadlines-section">
-
-            <h2>📅 Upcoming Deadlines</h2>
-
-            <p className="section-subtitle">
-              Stay organized and complete your goals on time.
-            </p>
-
-            {loadingGoals ? (
-              <div className="deadline-empty">
-                <p>Loading deadlines...</p>
-              </div>
-            ) : upcomingGoals.length === 0 ? (
-              <div className="deadline-empty">
-
-                <span>🗓️</span>
-                <p>No upcoming deadlines yet.</p>
-
-              </div>
-            ) : (
-
-              <div className="deadline-list">
-
-                {upcomingGoals.map((goal) => (
-                  <div
-                    className="deadline-item"
-                    key={goal._id}
-                  >
-
-                    <div>
-                      <strong>{goal.title}</strong>
-                      <p>{goal.category}</p>
-                    </div>
-
-                    <span
-                      className={
-                        goal.deadline < today
-                          ? "deadline-overdue"
-                          : ""
-                      }
-                    >
-                      {goal.deadline < today
-                        ? "Overdue: "
-                        : ""}
-
-                      {goal.deadline}
-                    </span>
-
-                  </div>
-                ))}
-
-              </div>
-            )}
-
-          </section>
-          </>
-        )}
+              </section>
+            </>
+          )}
         </main>
       </div>
     </div>

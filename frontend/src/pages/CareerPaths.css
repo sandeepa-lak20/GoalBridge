@@ -1,0 +1,249 @@
+
+.career-paths-page {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.career-paths-heading {
+  margin-bottom: 28px;
+}
+
+.career-paths-heading h1 {
+  color: #1e2b5c;
+  font-size: 32px;
+  margin: 12px 0;
+}
+
+.career-paths-heading p {
+  color: #7b849f;
+  font-size: 15px;
+}
+
+.career-search-form {
+  display: flex;
+  gap: 12px;
+  padding: 22px;
+  background: white;
+  border: 1px solid #ebe8f6;
+  border-radius: 16px;
+  margin-bottom: 26px;
+}
+
+.career-search-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 16px;
+  border: 1px solid #ddd8ed;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1e2b5c;
+  background-color: #ffffff;
+}
+
+.career-search-form button {
+  background: #7561d8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 13px 22px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.career-search-form button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.career-empty {
+  text-align: center;
+  background: white;
+  border: 1px solid #ebe8f6;
+  border-radius: 18px;
+  padding: 60px 20px;
+}
+
+.career-empty span {
+  font-size: 42px;
+}
+
+.career-empty h3 {
+  color: #1e2b5c;
+  margin: 15px 0 8px;
+}
+
+.career-empty p,
+.career-loading {
+  color: #7b849f;
+}
+
+.career-results h2 {
+  color: #1e2b5c;
+  margin-bottom: 20px;
+}
+
+.career-results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.career-result-card {
+  background: white;
+  border: 1px solid #ebe8f6;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 18px rgba(35, 30, 80, 0.04);
+}
+
+.career-result-icon {
+  font-size: 28px;
+  margin-bottom: 15px;
+}
+
+.career-result-card h3 {
+  color: #1e2b5c;
+  font-size: 18px;
+  text-transform: capitalize;
+  margin-bottom: 20px;
+}
+
+.career-details-btn {
+  background: #f0ecff;
+  color: #6550c6;
+  border: none;
+  padding: 11px 16px;
+  border-radius: 9px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.career-details-btn:hover {
+  background: #e4dcff;
+}
+
+.career-error {
+  color: #dc2626;
+  margin: 15px 0;
+}
+
+@media (max-width: 700px) {
+  .career-search-form {
+    flex-direction: column;
+  }
+
+  .career-results-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+.career-details-panel {
+  background: white;
+  padding: 24px;
+  border: 1px solid #ebe8f6;
+  border-radius: 16px;
+  margin-top: 24px;
+  color: #1e2b5c;
+}
+
+.career-details-panel h2,
+.career-details-panel h3 {
+  color: #1e2b5c;
+}
+
+.career-details-panel h3 {
+  margin-top: 24px;
+  margin-bottom: 12px;
+}
+
+.career-details-panel p {
+  color: #64748b;
+  line-height: 1.7;
+}
+
+.career-skills-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 15px 0 25px;
+}
+
+.career-skill {
+  background: #f0ecff;
+  color: #6550c6;
+  padding: 9px 14px;
+  border-radius: 20px;
+  font-size: 13px;
+}
+
+.career-details-panel > button {
+  background: #7561d8;
+  color: white;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Back button */
+.career-back-btn {
+  background: transparent;
+  border: none;
+  color: #6550c6;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  padding: 8px 0;
+}
+
+.career-back-btn:hover {
+  color: #4c36a8;
+}
+
+/* Career details heading */
+.career-details-panel h1 {
+  color: #1e2b5c;
+  font-size: 30px;
+  text-transform: capitalize;
+  margin-bottom: 20px;
+}
+
+
+/* Select Career Path button */
+.career-select-btn {
+  background: #7561d8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  padding: 12px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 15px;
+}
+
+.career-select-btn:hover {
+  background: #624ec7;
+}
+
+.career-select-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Success message */
+.career-save-message {
+  margin-top: 14px;
+  color: #16804a;
+  font-weight: 500;
+}
+
+/* Error message */
+.career-save-error {
+  margin-top: 14px;
+  color: #dc2626;
+  font-weight: 500;
+}
