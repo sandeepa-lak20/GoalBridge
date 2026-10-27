@@ -58,6 +58,7 @@ function Dashboard() {
   const [savingGoal, setSavingGoal] = useState(false);
   const [busyGoalId, setBusyGoalId] = useState(null);
   const [goalError, setGoalError] = useState("");
+  const [showNotifications, setShowNotifications] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState(null);
@@ -432,6 +433,41 @@ function Dashboard() {
         b.deadline || "9999-12-31"
       );
     });
+    
+  // Generate notifications using existing goals
+  const notifications = goals
+    .filter((goal) => {
+      const status = getDeadlineStatus(goal);
+
+      return (
+        status === "Overdue" ||
+        status === "Due Today" ||
+        status === "Due Soon"
+      );
+    })
+    .map((goal) => {
+      const status = getDeadlineStatus(goal);
+
+      let message = "";
+
+      if (status === "Overdue") {
+        message = "This goal is overdue.";
+      } else if (status === "Due Today") {
+        message = "This goal is due today.";
+      } else {
+        message = "This goal is due within 3 days.";
+      }
+
+      return {
+        id: goal._id,
+        title: goal.title,
+        status,
+        message,
+      };
+    });
+
+  // Number of active deadline alerts
+  const notificationCount = notifications.length;
 
   const stats = [
     {
@@ -527,18 +563,112 @@ function Dashboard() {
       {/* MAIN PAGE */}
       <div className="dashboard-page">
 
-        <header className="dashboard-header">
-          <div className="dashboard-brand">
-            🌉 GoalBridge
+        
+<header className="dashboard-header">
+
+  {/* GoalBridge Logo */}
+  <div className="dashboard-brand">
+    🌉 GoalBridge
+  </div>
+
+  <div className="dashboard-header-actions">
+
+    {/* Notification Bell */}
+    <div className="notification-container">
+
+      <button
+        type="button"
+        className="notification-btn"
+        onClick={() =>
+          setShowNotifications((previous) => !previous)
+        }
+        aria-label={`Notifications: ${notificationCount} deadline alerts`}
+        aria-expanded={showNotifications}
+        aria-controls="goal-notifications"
+      >
+        🔔
+
+        {/* Notification Count */}
+        {notificationCount > 0 && (
+          <span className="notification-badge">
+            {notificationCount}
+          </span>
+        )}
+      </button>
+
+      {/* Notification Dropdown */}
+      {showNotifications && (
+        <div
+          className="notification-dropdown"
+          id="goal-notifications"
+        >
+
+          <div className="notification-dropdown-header">
+            <h3>Notifications</h3>
+            <span>
+              {notificationCount} alerts
+            </span>
           </div>
 
-          <button
-            className="logout-btn"
-            onClick={handleLogout}
-          >
-            Logout →
-          </button>
-        </header>
+          {/* No Notifications */}
+          {notifications.length === 0 ? (
+            <p className="notification-empty">
+              No deadline alerts right now.
+            </p>
+          ) : (
+
+            /* Notification List */
+            <div className="notification-list">
+
+              {notifications.map((notification) => (
+                <div
+                  className="notification-item"
+                  key={notification.id}
+                >
+
+                  <strong>
+                    {notification.title}
+                  </strong>
+
+                  <p>
+                    {notification.message}
+                  </p>
+
+                  <span
+                    className={`notification-status ${
+                      notification.status === "Overdue"
+                        ? "notification-overdue"
+                        : notification.status === "Due Today"
+                        ? "notification-today"
+                        : "notification-soon"
+                    }`}
+                  >
+                    {notification.status}
+                  </span>
+
+                </div>
+              ))}
+
+            </div>
+          )}
+
+        </div>
+      )}
+
+    </div>
+
+    {/* Logout Button */}
+    <button
+      type="button"
+      className="logout-btn"
+      onClick={handleLogout}
+    >
+      Logout →
+    </button>
+
+  </div>
+</header>
+
 
         <main className="dashboard-main" id="dashboard">
 
