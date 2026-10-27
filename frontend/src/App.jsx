@@ -1,11 +1,11 @@
 
 import Navbar from "./components/Navbar";
 import "./App.css";
-import { Routes, Route,  } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import { Navigate } from "react-router-dom";
+
 
 const features = [
   {
@@ -248,23 +248,61 @@ function Home() {
   );
 }
 
- function App() {
+
+function ProtectedRoute({ children }) {
+  const token = localStorage.getItem("token");
+
+  let user = null;
+
+  try {
+    user = JSON.parse(
+      localStorage.getItem("user") || "null"
+    );
+  } catch {
+    user = null;
+  }
+
+  const userId = user?.id || user?._id;
+
+  if (!token || !userId) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
+
+ 
+function App() {
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/register" element={<Register />} />
-      <Route path="/login" element={<Login />} />
+
+      <Route
+        path="/register"
+        element={<Register />}
+      />
+
+      <Route
+        path="/login"
+        element={<Login />}
+      />
 
       <Route
         path="/dashboard"
         element={
-          localStorage.getItem("token")
-            ? <Dashboard />
-            : <Navigate to="/login" replace />
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
         }
+      />
+
+      <Route
+        path="*"
+        element={<Navigate to="/" replace />}
       />
     </Routes>
   );
 }
+
 
 export default App;

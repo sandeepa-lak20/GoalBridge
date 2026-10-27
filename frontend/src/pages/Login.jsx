@@ -47,6 +47,67 @@ function Login() {
       );
     } finally {
       setLoading(false);
+   async function handleSubmit(event) {
+  event.preventDefault();
+
+  if (loading) return;
+
+  setMessage("");
+  setIsError(false);
+  setLoading(true);
+
+  try {
+    const response = await axios.post(
+      `${API_URL}/login`,
+      {
+        identifier: identifier.trim(),
+        password,
+      },
+      {
+        timeout: 15000,
+      }
+    );
+
+    const { token, user } = response.data;
+
+    // Validate login response
+    if (
+      typeof token !== "string" ||
+      !token ||
+      !user ||
+      typeof user !== "object" ||
+      !(user.id || user._id)
+    ) {
+      throw new Error(
+        "Login response is missing required user information."
+      );
+    }
+
+    // Save authentication information
+    localStorage.setItem("token", token);
+    localStorage.setItem(
+      "user",
+      JSON.stringify(user)
+    );
+
+    // Navigate after saving authentication data
+    navigate("/dashboard", { replace: true });
+
+  } catch (error) {
+    console.error("Login failed:", error.message);
+
+    setIsError(true);
+
+    setMessage(
+      error.response?.data?.message ||
+      error.message ||
+      "Unable to log in. Please try again."
+    );
+
+  } finally {
+    setLoading(false);
+  }
+}
     }
   }
 
