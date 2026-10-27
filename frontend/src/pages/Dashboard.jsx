@@ -67,6 +67,7 @@ function Dashboard() {
 
   // Dashboard states
   const [goals, setGoals] = useState([]);
+  const [goalsRefreshKey, setGoalsRefreshKey] = useState(0);
   const [showForm, setShowForm] = useState(false);
   const [goalTitle, setGoalTitle] = useState("");
   const [goalDescription, setGoalDescription] = useState("");
@@ -176,7 +177,7 @@ function Dashboard() {
     return () => {
       cancelled = true;
     };
-  }, [token, userId]);
+  }, [token, userId, goalsRefreshKey]);
 
   // Fetch selected career whenever dashboard becomes visible
   useEffect(() => {
@@ -611,8 +612,21 @@ function Dashboard() {
             />
           ) : activeSection === "career-paths" ? (
             <CareerPaths
-              onCareerSelected={setDashboardCareer}
-            />
+            onCareerSelected={setDashboardCareer}
+            onGoToGoals={() => {
+              setGoalsRefreshKey((previous) => previous + 1);
+              setActiveSection("my-goals");
+
+              requestAnimationFrame(() => {
+                document
+                  .getElementById("my-goals")
+                  ?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start",
+                  });
+              });
+            }}
+          />
           ) : (
             <>
 
