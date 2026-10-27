@@ -7,19 +7,12 @@ import CareerPaths from "./CareerPaths";
 
 const API_URL = "http://localhost:5000/api/goals";
 
-// Calculate the deadline status of a goal
 function getDeadlineStatus(goal) {
-  if (goal.completed) {
-    return "Completed";
-  }
-
-  if (!goal.deadline) {
-    return "No Deadline";
-  }
+  if (goal.completed) return "Completed";
+  if (!goal.deadline) return "No Deadline";
 
   const now = new Date();
-
-  const todayUTC = Date.UTC(
+  const today = Date.UTC(
     now.getFullYear(),
     now.getMonth(),
     now.getDate()
@@ -29,16 +22,14 @@ function getDeadlineStatus(goal) {
     .split("-")
     .map(Number);
 
-  const deadlineUTC = Date.UTC(year, month - 1, day);
-
+  const deadline = Date.UTC(year, month - 1, day);
   const daysLeft = Math.round(
-    (deadlineUTC - todayUTC) / (1000 * 60 * 60 * 24)
+    (deadline - today) / 86400000
   );
 
   if (daysLeft < 0) return "Overdue";
   if (daysLeft === 0) return "Due Today";
   if (daysLeft <= 3) return "Due Soon";
-
   return "Upcoming";
 }
 
@@ -46,49 +37,45 @@ function Dashboard() {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
-  // Deadline filtering and sorting
-  const [deadlineFilter, setDeadlineFilter] = useState("All");
-  const [goalSort, setGoalSort] = useState("deadline");
-
   let user = null;
-
   try {
     user = JSON.parse(localStorage.getItem("user") || "null");
   } catch {
     user = null;
   }
 
+  const userId = user?.id || user?._id;
+
   const [profileName, setProfileName] = useState(
     user?.firstName || "User"
   );
+  const [activeSection, setActiveSection] =
+    useState("dashboard");
 
-  const firstName = profileName;
-  const userId = user?.id || user?._id;
-
-  // Dashboard states
   const [goals, setGoals] = useState([]);
   const [goalsRefreshKey, setGoalsRefreshKey] = useState(0);
-  const [showForm, setShowForm] = useState(false);
-  const [goalTitle, setGoalTitle] = useState("");
-  const [goalDescription, setGoalDescription] = useState("");
-  const [goalDate, setGoalDate] = useState("");
-  const [goalCategory, setGoalCategory] = useState("Learning");
-  const [goalPriority, setGoalPriority] = useState("Medium");
-  const [activeSection, setActiveSection] = useState("dashboard");
-
-  // Selected career
-  const [dashboardCareer, setDashboardCareer] = useState(null);
-
-  // API states
   const [loadingGoals, setLoadingGoals] = useState(true);
   const [savingGoal, setSavingGoal] = useState(false);
   const [busyGoalId, setBusyGoalId] = useState(null);
   const [goalError, setGoalError] = useState("");
 
-  // Store the ID of the goal being edited
+  const [showForm, setShowForm] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState(null);
+  const [goalTitle, setGoalTitle] = useState("");
+  const [goalDescription, setGoalDescription] = useState("");
+  const [goalCategory, setGoalCategory] = useState("Learning");
+  const [goalPriority, setGoalPriority] = useState("Medium");
+  const [goalDate, setGoalDate] = useState("");
 
-  // Helper for authenticated backend requests
+  const [deadlineFilter, setDeadlineFilter] = useState("All");
+  const [goalSort, setGoalSort] = useState("deadline");
+  const [dashboardCareer, setDashboardCareer] = useState(null);
+
+  // Delete confirmation states
+  const [goalToDelete, setGoalToDelete] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
+
+  // Authenticated API requests
   async function goalRequest(path = "", options = {}) {
     let response;
 
@@ -112,19 +99,18 @@ function Dashboard() {
     if (!response.ok) {
       if (response.status === 401) {
         throw new Error(
-          "Your login session has expired. Please log out and log in again."
+          "Your login session has expired. Please log in again."
         );
       }
-
       throw new Error(
-        data.message || "Something went wrong. Please try again."
+        data.message || "Something went wrong."
       );
     }
 
     return data;
   }
 
-  // Load goals from MongoDB
+  // Load goals
   useEffect(() => {
     if (!token || !userId) {
       setLoadingGoals(false);
@@ -148,27 +134,19 @@ function Dashboard() {
 
         if (!response.ok) {
           throw new Error(
-            response.status === 401
-              ? "Your login session has expired. Please log in again."
-              : data.message || "Failed to load goals."
+            data.message || "Failed to load goals."
           );
         }
 
         if (!Array.isArray(data)) {
-          throw new Error("Unexpected response from the Goal API.");
+          throw new Error("Unexpected response from Goals API.");
         }
 
-        if (!cancelled) {
-          setGoals(data);
-        }
+        if (!cancelled) setGoals(data);
       } catch (error) {
-        if (!cancelled) {
-          setGoalError(error.message);
-        }
+        if (!cancelled) setGoalError(error.message);
       } finally {
-        if (!cancelled) {
-          setLoadingGoals(false);
-        }
+        if (!cancelled) setLoadingGoals(false);
       }
     }
 
@@ -179,7 +157,7 @@ function Dashboard() {
     };
   }, [token, userId, goalsRefreshKey]);
 
-  // Fetch selected career whenever dashboard becomes visible
+  // Load selected career
   useEffect(() => {
     if (!token || activeSection !== "dashboard") return;
 
@@ -221,7 +199,6 @@ function Dashboard() {
     };
   }, [token, activeSection]);
 
-  // Clear form fields and editing state
   function resetGoalForm() {
     setGoalTitle("");
     setGoalDescription("");
@@ -232,7 +209,17 @@ function Dashboard() {
     setShowForm(false);
   }
 
-  // Open form for creating a new goal
+  function scrollToSection(id) {
+    setActiveSection(id);
+
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
+
   function openAddGoalForm() {
     resetGoalForm();
     setGoalError("");
@@ -240,7 +227,6 @@ function Dashboard() {
     scrollToSection("my-goals");
   }
 
-  // Open form with existing goal details
   function editGoal(goal) {
     if (savingGoal || busyGoalId) return;
 
@@ -252,11 +238,9 @@ function Dashboard() {
     setGoalDate(goal.deadline || "");
     setGoalError("");
     setShowForm(true);
-
     scrollToSection("my-goals");
   }
 
-  // Create or update a goal
   async function saveGoal(e) {
     e.preventDefault();
 
@@ -275,24 +259,17 @@ function Dashboard() {
       };
 
       if (editingGoalId) {
-        // Update existing goal
-        const data = await goalRequest(
-          `/${editingGoalId}`,
-          {
-            method: "PUT",
-            body: JSON.stringify(goalData),
-          }
-        );
+        const data = await goalRequest(`/${editingGoalId}`, {
+          method: "PUT",
+          body: JSON.stringify(goalData),
+        });
 
-        setGoals((previousGoals) =>
-          previousGoals.map((goal) =>
-            goal._id === editingGoalId
-              ? data.goal
-              : goal
+        setGoals((previous) =>
+          previous.map((goal) =>
+            goal._id === editingGoalId ? data.goal : goal
           )
         );
       } else {
-        // Create new goal
         const data = await goalRequest("", {
           method: "POST",
           body: JSON.stringify({
@@ -301,10 +278,7 @@ function Dashboard() {
           }),
         });
 
-        setGoals((previousGoals) => [
-          data.goal,
-          ...previousGoals,
-        ]);
+        setGoals((previous) => [data.goal, ...previous]);
       }
 
       resetGoalForm();
@@ -315,14 +289,10 @@ function Dashboard() {
     }
   }
 
-  // Complete or uncomplete a goal
   async function toggleGoal(id) {
     if (busyGoalId || savingGoal) return;
 
-    const selectedGoal = goals.find(
-      (goal) => goal._id === id
-    );
-
+    const selectedGoal = goals.find((goal) => goal._id === id);
     if (!selectedGoal) return;
 
     try {
@@ -336,8 +306,8 @@ function Dashboard() {
         }),
       });
 
-      setGoals((previousGoals) =>
-        previousGoals.map((goal) =>
+      setGoals((previous) =>
+        previous.map((goal) =>
           goal._id === id ? data.goal : goal
         )
       );
@@ -348,58 +318,60 @@ function Dashboard() {
     }
   }
 
-  // Delete a goal
-  async function deleteGoal(id) {
+  // Open confirmation dialog
+  function confirmDeleteGoal(goal) {
     if (busyGoalId || savingGoal) return;
 
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this goal?"
-    );
+    setGoalToDelete(goal);
+    setDeleteError("");
+  }
 
-    if (!confirmed) return;
+  // Close confirmation dialog
+  function cancelDeleteGoal() {
+    if (busyGoalId) return;
+
+    setGoalToDelete(null);
+    setDeleteError("");
+  }
+
+  // Delete only after confirmation
+  async function deleteGoal() {
+    if (!goalToDelete || busyGoalId || savingGoal) return;
+
+    const id = goalToDelete._id;
 
     try {
       setBusyGoalId(id);
       setGoalError("");
+      setDeleteError("");
 
       await goalRequest(`/${id}`, {
         method: "DELETE",
       });
 
-      setGoals((previousGoals) =>
-        previousGoals.filter(
-          (goal) => goal._id !== id
-        )
+      setGoals((previous) =>
+        previous.filter((goal) => goal._id !== id)
       );
 
       if (editingGoalId === id) {
         resetGoalForm();
       }
+
+      setGoalToDelete(null);
     } catch (error) {
-      setGoalError(error.message);
+      setDeleteError(error.message);
     } finally {
       setBusyGoalId(null);
     }
   }
 
-  // Logout
   function handleLogout() {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
     navigate("/login", { replace: true });
   }
 
-  // Sidebar navigation
-  function scrollToSection(id) {
-    setActiveSection(id);
-
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  }
-
-  // Dashboard statistics
+  // Goal statistics
   const activeGoals = goals.filter(
     (goal) => !goal.completed
   ).length;
@@ -421,35 +393,25 @@ function Dashboard() {
   ).length;
 
   const progress = goals.length
-    ? Math.round(
-        (completedGoals / goals.length) * 100
-      )
+    ? Math.round((completedGoals / goals.length) * 100)
     : 0;
 
   const now = new Date();
-
   const today = [
     now.getFullYear(),
     String(now.getMonth() + 1).padStart(2, "0"),
     String(now.getDate()).padStart(2, "0"),
   ].join("-");
 
-  // Upcoming deadlines
   const upcomingGoals = goals
-    .filter(
-      (goal) => !goal.completed && goal.deadline
-    )
+    .filter((goal) => !goal.completed && goal.deadline)
     .sort((a, b) =>
       a.deadline.localeCompare(b.deadline)
     );
 
-  // Filter and sort goals
   const filteredGoals = goals
     .filter((goal) => {
-      if (deadlineFilter === "All") {
-        return true;
-      }
-
+      if (deadlineFilter === "All") return true;
       return getDeadlineStatus(goal) === deadlineFilter;
     })
     .sort((a, b) => {
@@ -507,22 +469,15 @@ function Dashboard() {
           🌉 Goal<span>Bridge</span>
         </div>
 
-        <p className="sidebar-heading">
-          MAIN MENU
-        </p>
+        <p className="sidebar-heading">MAIN MENU</p>
 
         <nav className="sidebar-menu">
-
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "dashboard"
-                ? "active"
-                : ""
+              activeSection === "dashboard" ? "active" : ""
             }`}
-            onClick={() =>
-              scrollToSection("dashboard")
-            }
+            onClick={() => scrollToSection("dashboard")}
           >
             🏠 Dashboard
           </button>
@@ -530,13 +485,9 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "my-goals"
-                ? "active"
-                : ""
+              activeSection === "my-goals" ? "active" : ""
             }`}
-            onClick={() =>
-              scrollToSection("my-goals")
-            }
+            onClick={() => scrollToSection("my-goals")}
           >
             🎯 My Goals
           </button>
@@ -544,13 +495,9 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "career-paths"
-                ? "active"
-                : ""
+              activeSection === "career-paths" ? "active" : ""
             }`}
-            onClick={() =>
-              setActiveSection("career-paths")
-            }
+            onClick={() => setActiveSection("career-paths")}
           >
             🧭 Career Paths
           </button>
@@ -558,26 +505,20 @@ function Dashboard() {
           <button
             type="button"
             className={`sidebar-link ${
-              activeSection === "profile"
-                ? "active"
-                : ""
+              activeSection === "profile" ? "active" : ""
             }`}
-            onClick={() =>
-              setActiveSection("profile")
-            }
+            onClick={() => setActiveSection("profile")}
           >
             👤 My Profile
           </button>
-
         </nav>
 
         <div className="sidebar-bottom">
           <div className="sidebar-avatar">
-            {firstName.charAt(0).toUpperCase()}
+            {profileName.charAt(0).toUpperCase()}
           </div>
-
           <div>
-            <strong>{firstName}</strong>
+            <strong>{profileName}</strong>
             <p>GoalBridge Member</p>
           </div>
         </div>
@@ -586,7 +527,6 @@ function Dashboard() {
       {/* MAIN PAGE */}
       <div className="dashboard-page">
 
-        {/* HEADER */}
         <header className="dashboard-header">
           <div className="dashboard-brand">
             🌉 GoalBridge
@@ -600,10 +540,8 @@ function Dashboard() {
           </button>
         </header>
 
-        <main
-          className="dashboard-main"
-          id="dashboard"
-        >
+        <main className="dashboard-main" id="dashboard">
+
           {activeSection === "profile" ? (
             <Profile
               onSaved={(updatedUser) =>
@@ -612,45 +550,42 @@ function Dashboard() {
             />
           ) : activeSection === "career-paths" ? (
             <CareerPaths
-            onCareerSelected={setDashboardCareer}
-            onGoToGoals={() => {
-              setGoalsRefreshKey((previous) => previous + 1);
-              setActiveSection("my-goals");
+              onCareerSelected={setDashboardCareer}
+              onGoToGoals={() => {
+                setGoalsRefreshKey((previous) => previous + 1);
+                setActiveSection("my-goals");
 
-              requestAnimationFrame(() => {
-                document
-                  .getElementById("my-goals")
-                  ?.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start",
-                  });
-              });
-            }}
-          />
+                requestAnimationFrame(() => {
+                  document
+                    .getElementById("my-goals")
+                    ?.scrollIntoView({
+                      behavior: "smooth",
+                      block: "start",
+                    });
+                });
+              }}
+            />
           ) : (
             <>
 
               {/* WELCOME SECTION */}
               <section className="dashboard-welcome">
-
                 <span className="dashboard-tag">
                   YOUR PERSONAL DASHBOARD
                 </span>
 
                 <h1>
-                  Welcome back, {firstName}! 👋
+                  Welcome back, {profileName}! 👋
                 </h1>
 
                 <p>
                   Every great career starts with a plan.
                   Let's take the next step toward your future.
                 </p>
-
               </section>
 
               {/* CAREER OVERVIEW */}
               <section className="dashboard-section">
-
                 <h2>Your Career Overview</h2>
 
                 <p className="section-subtitle">
@@ -666,16 +601,14 @@ function Dashboard() {
                       <div className="stat-icon">
                         {stat.icon}
                       </div>
-
                       <p>{stat.title}</p>
                       <h3>{stat.value}</h3>
                     </div>
                   ))}
                 </div>
-
               </section>
 
-              {/* SMART DEADLINE SUMMARY */}
+              {/* DEADLINE OVERVIEW */}
               <section className="dashboard-section">
                 <h2>📅 Deadline Overview</h2>
 
@@ -708,7 +641,6 @@ function Dashboard() {
 
               {/* OVERALL PROGRESS */}
               <section className="overall-progress-card">
-
                 <div className="progress-heading">
                   <div>
                     <h2>Overall Goal Progress</h2>
@@ -721,30 +653,24 @@ function Dashboard() {
                 <div className="progress-track">
                   <div
                     className="progress-fill"
-                    style={{
-                      width: `${progress}%`,
-                    }}
+                    style={{ width: `${progress}%` }}
                   />
                 </div>
 
                 <p>
                   {completedGoals} of {goals.length} goals completed
                 </p>
-
               </section>
 
               {/* GETTING STARTED AND JOURNEY */}
               <section className="dashboard-bottom">
 
                 <div className="getting-started-card">
-
                   <span className="dashboard-tag">
                     GET STARTED
                   </span>
 
-                  <h2>
-                    Start your career journey 🚀
-                  </h2>
+                  <h2>Start your career journey 🚀</h2>
 
                   <p>
                     Set your first career goal and start building
@@ -757,16 +683,13 @@ function Dashboard() {
                   >
                     + Create Your First Goal
                   </button>
-
                 </div>
 
                 <div className="journey-card">
-
                   <h2>Your Journey</h2>
 
                   <div className="journey-item">
                     <span>✓</span>
-
                     <div>
                       <strong>Create your account</strong>
                       <p>Welcome to GoalBridge!</p>
@@ -774,13 +697,9 @@ function Dashboard() {
                   </div>
 
                   <div className="journey-item">
-                    <span>
-                      {goals.length > 0 ? "✓" : "2"}
-                    </span>
-
+                    <span>{goals.length > 0 ? "✓" : "2"}</span>
                     <div>
                       <strong>Set your first goal</strong>
-
                       <p>
                         {goals.length > 0
                           ? "Your goal journey has started!"
@@ -793,13 +712,11 @@ function Dashboard() {
                     <span>
                       {completedGoals > 0 ? "✓" : "3"}
                     </span>
-
                     <div>
                       <strong>Achieve your goals</strong>
                       <p>Track your progress and grow.</p>
                     </div>
                   </div>
-
                 </div>
               </section>
 
@@ -808,12 +725,9 @@ function Dashboard() {
                 className="dashboard-section my-goals-section"
                 id="my-goals"
               >
-
                 <div className="goals-heading">
-
                   <div>
                     <h2>🎯 My Goals</h2>
-
                     <p className="section-subtitle">
                       Manage your personal and career goals.
                     </p>
@@ -832,10 +746,9 @@ function Dashboard() {
                   >
                     {showForm ? "Cancel" : "+ Add Goal"}
                   </button>
-
                 </div>
 
-                {/* FILTER AND SORT CONTROLS */}
+                {/* FILTER AND SORT */}
                 <div className="goal-filter-bar">
                   <div>
                     <label htmlFor="deadline-filter">
@@ -894,13 +807,12 @@ function Dashboard() {
                   </p>
                 )}
 
-                {/* ADD / EDIT GOAL FORM */}
+                {/* CREATE / EDIT FORM */}
                 {showForm && (
                   <form
                     className="goal-form"
                     onSubmit={saveGoal}
                   >
-
                     <h3>
                       {editingGoalId
                         ? "✏️ Edit Goal"
@@ -1014,7 +926,6 @@ function Dashboard() {
                         </button>
                       )}
                     </div>
-
                   </form>
                 )}
 
@@ -1031,42 +942,29 @@ function Dashboard() {
                   </div>
                 ) : goals.length === 0 ? (
                   <div className="goals-empty">
-
-                    <div className="empty-goal-icon">
-                      🎯
-                    </div>
-
+                    <div className="empty-goal-icon">🎯</div>
                     <h3>No goals added yet</h3>
-
                     <p>
                       Your future starts with one goal.
                       Add your first goal to begin.
                     </p>
-
                   </div>
                 ) : filteredGoals.length === 0 ? (
                   <div className="goals-empty">
-                    <div className="empty-goal-icon">
-                      🔎
-                    </div>
-
+                    <div className="empty-goal-icon">🔎</div>
                     <h3>No matching goals</h3>
-
                     <p>
                       No goals match the selected status.
                       Try changing the filter.
                     </p>
                   </div>
                 ) : (
-
                   <div className="goals-list">
-
                     {filteredGoals.map((goal) => (
                       <div
                         className="goal-list-item"
                         key={goal._id}
                       >
-
                         <input
                           type="checkbox"
                           checked={goal.completed}
@@ -1080,12 +978,9 @@ function Dashboard() {
                         />
 
                         <div className="goal-item-info">
-
                           <strong
                             className={
-                              goal.completed
-                                ? "goal-done"
-                                : ""
+                              goal.completed ? "goal-done" : ""
                             }
                           >
                             {goal.title}
@@ -1096,10 +991,7 @@ function Dashboard() {
                           )}
 
                           <div className="goal-meta">
-
-                            <span>
-                              {goal.category}
-                            </span>
+                            <span>{goal.category}</span>
 
                             <span
                               className={`goal-priority priority-${(
@@ -1110,19 +1002,18 @@ function Dashboard() {
                             </span>
 
                             {goal.deadline && (
-                              <span>
-                                📅 {goal.deadline}
-                              </span>
+                              <span>📅 {goal.deadline}</span>
                             )}
 
                             <span
-                              className={`deadline-status status-${getDeadlineStatus(goal)
+                              className={`deadline-status status-${getDeadlineStatus(
+                                goal
+                              )
                                 .toLowerCase()
                                 .replace(/\s+/g, "-")}`}
                             >
                               {getDeadlineStatus(goal)}
                             </span>
-
                           </div>
                         </div>
 
@@ -1147,24 +1038,20 @@ function Dashboard() {
                             busyGoalId !== null || savingGoal
                           }
                           onClick={() =>
-                            deleteGoal(goal._id)
+                            confirmDeleteGoal(goal)
                           }
                           aria-label={`Delete ${goal.title}`}
                         >
                           ✕
                         </button>
-
                       </div>
                     ))}
-
                   </div>
                 )}
-
               </section>
 
               {/* UPCOMING DEADLINES */}
               <section className="dashboard-section deadlines-section">
-
                 <h2>📅 Upcoming Deadlines</h2>
 
                 <p className="section-subtitle">
@@ -1177,21 +1064,16 @@ function Dashboard() {
                   </div>
                 ) : upcomingGoals.length === 0 ? (
                   <div className="deadline-empty">
-
                     <span>🗓️</span>
                     <p>No upcoming deadlines yet.</p>
-
                   </div>
                 ) : (
-
                   <div className="deadline-list">
-
                     {upcomingGoals.map((goal) => (
                       <div
                         className="deadline-item"
                         key={goal._id}
                       >
-
                         <div>
                           <strong>{goal.title}</strong>
                           <p>{goal.category}</p>
@@ -1207,21 +1089,91 @@ function Dashboard() {
                           {goal.deadline < today
                             ? "Overdue: "
                             : ""}
-
                           {goal.deadline}
                         </span>
-
                       </div>
                     ))}
-
                   </div>
                 )}
-
               </section>
             </>
           )}
         </main>
       </div>
+
+      {/* DELETE CONFIRMATION DIALOG */}
+      {goalToDelete && (
+        <div
+          className="delete-modal-overlay"
+          onMouseDown={(e) => {
+            if (e.target === e.currentTarget) {
+              cancelDeleteGoal();
+            }
+          }}
+        >
+          <div
+            className="delete-modal"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-modal-title"
+            aria-describedby="delete-modal-description"
+            onKeyDown={(e) => {
+              if (e.key === "Escape") {
+                cancelDeleteGoal();
+              }
+            }}
+          >
+            <div className="delete-modal-icon">
+              ⚠️
+            </div>
+
+            <h2 id="delete-modal-title">
+              Delete Goal?
+            </h2>
+
+            <p id="delete-modal-description">
+              Are you sure you want to delete
+              <strong> "{goalToDelete.title}"</strong>?
+            </p>
+
+            <p className="delete-modal-warning">
+              This action cannot be undone.
+            </p>
+
+            {deleteError && (
+              <p
+                className="delete-modal-error"
+                role="alert"
+              >
+                {deleteError}
+              </p>
+            )}
+
+            <div className="delete-modal-actions">
+              <button
+                type="button"
+                className="delete-cancel-btn"
+                onClick={cancelDeleteGoal}
+                disabled={busyGoalId !== null}
+                autoFocus
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                className="delete-confirm-btn"
+                onClick={deleteGoal}
+                disabled={busyGoalId !== null}
+              >
+                {busyGoalId !== null
+                  ? "Deleting..."
+                  : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
