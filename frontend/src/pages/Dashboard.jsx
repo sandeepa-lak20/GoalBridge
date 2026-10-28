@@ -1,5 +1,5 @@
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import Profile from "./Profile";
@@ -51,6 +51,7 @@ function Dashboard() {
   );
   const [activeSection, setActiveSection] =
     useState("dashboard");
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const [goals, setGoals] = useState([]);
   const [goalsRefreshKey, setGoalsRefreshKey] = useState(0);
@@ -59,7 +60,7 @@ function Dashboard() {
   const [busyGoalId, setBusyGoalId] = useState(null);
   const [goalError, setGoalError] = useState("");
   const [showNotifications, setShowNotifications] = useState(false);
-
+  const pendingScrollRef = useRef(null);
   const [showForm, setShowForm] = useState(false);
   const [editingGoalId, setEditingGoalId] = useState(null);
   const [goalTitle, setGoalTitle] = useState("");
@@ -210,16 +211,44 @@ function Dashboard() {
     setShowForm(false);
   }
 
-  function scrollToSection(id) {
-    setActiveSection(id);
+  
 
+function scrollToSection(id) {
+  setMobileMenuOpen(false);
+  pendingScrollRef.current = id;
+  setActiveSection(id);
+
+  // Handles clicking the already active section
+  if (activeSection === id) {
     requestAnimationFrame(() => {
       document.getElementById(id)?.scrollIntoView({
         behavior: "smooth",
         block: "start",
       });
+      pendingScrollRef.current = null;
     });
   }
+}
+
+useEffect(() => {
+  const id = pendingScrollRef.current;
+  if (!id) return;
+
+  const frame = requestAnimationFrame(() => {
+    const element = document.getElementById(id);
+
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      pendingScrollRef.current = null;
+    }
+  });
+
+  return () => cancelAnimationFrame(frame);
+}, [activeSection]);
+
 
   function openAddGoalForm() {
     resetGoalForm();
@@ -498,9 +527,31 @@ function Dashboard() {
 
   return (
     <div className="dashboard-layout">
+      {/* Mobile menu button */}
+<button
+  type="button"
+  className="mobile-menu-btn"
+  onClick={() => setMobileMenuOpen((previous) => !previous)}
+  aria-label={mobileMenuOpen ? "Close menu" : "Open menu"}
+  aria-expanded={mobileMenuOpen}
+>
+  {mobileMenuOpen ? "✕" : "☰"}
+</button>
+
+{/* Mobile sidebar backdrop */}
+{mobileMenuOpen && (
+  <div
+    className="mobile-sidebar-overlay"
+    onClick={() => setMobileMenuOpen(false)}
+  />
+)}
 
       {/* SIDEBAR */}
-      <aside className="dashboard-sidebar">
+      <aside
+  className={`dashboard-sidebar ${
+    mobileMenuOpen ? "mobile-open" : ""
+  }`}
+>
         <div className="sidebar-logo">
           🌉 Goal<span>Bridge</span>
         </div>
@@ -513,7 +564,8 @@ function Dashboard() {
             className={`sidebar-link ${
               activeSection === "dashboard" ? "active" : ""
             }`}
-            onClick={() => scrollToSection("dashboard")}
+            onClick={() => {scrollToSection("dashboard")
+            }}
           >
             🏠 Dashboard
           </button>
@@ -523,7 +575,8 @@ function Dashboard() {
             className={`sidebar-link ${
               activeSection === "my-goals" ? "active" : ""
             }`}
-            onClick={() => scrollToSection("my-goals")}
+            onClick={() => { scrollToSection("my-goals")
+            }}
           >
             🎯 My Goals
           </button>
@@ -533,7 +586,10 @@ function Dashboard() {
             className={`sidebar-link ${
               activeSection === "career-paths" ? "active" : ""
             }`}
-            onClick={() => setActiveSection("career-paths")}
+            onClick={() => {
+              setActiveSection("career-paths");
+              setMobileMenuOpen(false);
+            }}
           >
             🧭 Career Paths
           </button>
@@ -543,7 +599,10 @@ function Dashboard() {
             className={`sidebar-link ${
               activeSection === "profile" ? "active" : ""
             }`}
-            onClick={() => setActiveSection("profile")}
+            onClick={() => {
+            setActiveSection("profile");
+            setMobileMenuOpen(false);
+          }}
           >
             👤 My Profile
           </button>
@@ -683,7 +742,7 @@ function Dashboard() {
               onCareerSelected={setDashboardCareer}
               onGoToGoals={() => {
                 setGoalsRefreshKey((previous) => previous + 1);
-                setActiveSection("my-goals");
+                 scrollToSection("my-goals");
 
                 requestAnimationFrame(() => {
                   document
