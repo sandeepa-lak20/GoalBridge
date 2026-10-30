@@ -1,4 +1,3 @@
-
 import express from "express";
 import mongoose from "mongoose";
 import Goal from "../models/Goal.js";

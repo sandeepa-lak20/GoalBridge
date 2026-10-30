@@ -1,5 +1,4 @@
-
-import Navbar from "./components/Navbar";
+import Navbar from "./Components/Navbar";
 import "./App.css";
 import { Routes, Route, Navigate } from "react-router-dom";
 import Register from "./pages/Register";
@@ -14,13 +13,6 @@ const features = [
     description:
       "Explore different career paths and discover the skills associated with your dream job.",
     color: "lavender",
-  },
-  {
-    icon: "🧠",
-    title: "Skill Gap Analysis",
-    description:
-      "Compare your current skills with career requirements and identify what you need to learn.",
-    color: "mint",
   },
   {
     icon: "🚀",

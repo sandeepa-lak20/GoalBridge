@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import "./Profile.css";
 import ChangePassword from "./ChangePassword";
